@@ -13,14 +13,14 @@
 class Chess {
 private:
 
-	std::array<piece, 128> _board;
+	std::array<std::optional<piece>, 128> _board;
 	color _turn = WHITE;
 	std::map<std::string, std::string> _header;
 	std::map<color, int> _kings = { { color::w, EMPTY }, { color::b, EMPTY } };
 	int _epSquare = -1;
 	int _halfMoves = -1;
 	int _moveNumber = 0;
-	History _history;
+	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
 	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
 
@@ -34,11 +34,11 @@ private:
 
 	void _updateEnPassantSquare();
 
-	bool _attacked();
+	bool _attacked(color c, square sq);
 
-	bool _isKingAttacked();
+	bool _isKingAttacked(color c);
 
-	void _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<square> square = std::nullopt);
+	std::vector<internalMove> _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<square> square = std::nullopt);
 
 	void _push(internalMove move);
 
@@ -117,7 +117,7 @@ public:
 	move undo();
 	std::string pgn(char newline = '\n', int maxWidth = 0);
 	std::map<std::string, std::string> header(const std::vector<std::string>& args);
-	void loadPgn(std::string pgn, bool strict = false, std::string newlineChar = "\r?\n");
+	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
 
 	std::string ascii();
 
