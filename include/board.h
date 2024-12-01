@@ -9,6 +9,4 @@
 
 std::pair<bool, std::string> validateFen(std::string fen);
 
-
-
 #endif
