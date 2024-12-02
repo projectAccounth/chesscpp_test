@@ -129,17 +129,17 @@ std::map<square, int> Ox88 = {
     {square::a1, 112}, {square::b1, 113}, {square::c1, 114}, {square::d1, 115}, {square::e1, 116}, {square::f1, 117}, {square::g1, 118}, {square::h1, 119}
 };
 
-const std::map<char, std::vector<int>> PAWN_OFFSETS = {
-    {'b', {16, 32, 17, 15}}, // Black pawn offsets
-    {'w', {-16, -32, -17, -15}} // White pawn offsets
+const std::map<color, std::vector<int>> PAWN_OFFSETS = {
+    {color::b, {16, 32, 17, 15}}, // Black pawn offsets
+    {color::w, {-16, -32, -17, -15}} // White pawn offsets
 };
 
-const std::map<char, std::vector<int>> PIECE_OFFSETS = {
-    {'n', {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
-    {'b', {-17, -15, 17, 15}},                  // Bishop offsets
-    {'r', {-16, 1, 16, -1}},                    // Rook offsets
-    {'q', {-17, -16, -15, 1, 17, 16, 15, -1}},   // Queen offsets
-    {'k', {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
+const std::map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
+    {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
+    {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
+    {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
+    {QUEEN, {-17, -16, -15, 1, 17, 16, 15, -1}},   // Queen offsets
+    {KING, {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
 };
 const std::vector<int> ATTACKS = {
     20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20, 0,
@@ -190,7 +190,7 @@ const std::map<pieceSymbol, std::string> SIDES = {
 
 struct RookPosition {
     int square;
-    std::string flag;
+    int flag;
 };
 
 const std::map<color, std::vector<RookPosition>> ROOKS = {

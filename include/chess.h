@@ -44,7 +44,7 @@ private:
 
 	void _makeMove(internalMove move);
 
-	move _undoMove();
+	std::optional<internalMove> _undoMove();
 
 	std::string _moveToSan(internalMove move, std::vector<internalMove> moves);
 
@@ -107,16 +107,22 @@ public:
 
 	bool isGameOver();
 
-	std::vector<std::string> moves() const;
-	std::vector<std::string> moves(square sq) const;
-	std::vector<std::string> moves(square sq, pieceSymbol piece) const;
-	std::variant<std::vector<std::string>, std::vector<move>>
-		moves(const std::optional <bool> verbose, const std::optional<square> sq);
+	std::vector<std::string> moves();
+
+	std::vector<std::string> moves(std::optional<square> square);
+
+	std::vector<move> Chess::moves(std::optional<square> sq, std::optional<pieceSymbol> piece, bool verbose);
+
 	void cmove(std::string move, bool strict = false);
+
 	void cmove(std::tuple<std::string, std::string, std::optional<std::string>> moveOptions, bool strict = false);
+	
 	move undo();
+	
 	std::string pgn(char newline = '\n', int maxWidth = 0);
+	
 	std::map<std::string, std::string> header(const std::vector<std::string>& args);
+	
 	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
 
 	std::string ascii();
@@ -130,7 +136,9 @@ public:
 	std::optional<std::string> squareColor(square sq);
 
 	std::vector<std::string> history();
+	
 	std::vector<move> historym(bool verbose = false);
+	
 	std::vector<std::string> historys(bool verbose = true);
 
 	bool getCastlingRights(color color);

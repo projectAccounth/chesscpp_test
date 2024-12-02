@@ -21,8 +21,7 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
 
 std::vector<std::string> splitWithRegex(const std::string& str, const std::string& pattern) {
 	std::regex re(pattern);
-	std::sregex_token_iterator it(str.begin(), str.end(), re, -1); // -1 means "split by the regex"
-	std::sregex_token_iterator end;
+	std::sregex_token_iterator it(str.begin(), str.end(), re, -1); 	std::sregex_token_iterator end;
 
 	return { it, end };
 }
@@ -84,7 +83,6 @@ color swapColor(color color) {
 	return color == WHITE ? BLACK : WHITE;
 }
 
-// Used to identify ambigous moves
 std::string getDisambiguator(internalMove move, std::vector<internalMove> moves) {
 	const square from = static_cast<square>(move.from);
 	const square to = static_cast<square>(move.to);
@@ -204,7 +202,7 @@ bool Chess::_put(pieceSymbol type, color color, square sq) {
 	if (SYMBOLS.at(std::tolower(ptoc.at(type))) == -1) {
 		return false;
 	}
-	if (Ox88.find(sq) != Ox88.end()) {
+	if (Ox88.count(sq) > 0) {
 		return false;
 	}
 	const square squ = static_cast<square>(Ox88[sq]);
@@ -213,10 +211,10 @@ bool Chess::_put(pieceSymbol type, color color, square sq) {
 		return false;
 	}
 
-	const std::optional<piece> currentPieceOnSquare = _board[static_cast<int>(sq)];
+	const std::optional<piece> currentPieceOnsquare = _board[static_cast<int>(sq)];
 	 
-	if (currentPieceOnSquare.has_value() && currentPieceOnSquare.value().type == KING) {
-		_kings[currentPieceOnSquare.value().color] = EMPTY;
+	if (currentPieceOnsquare.has_value() && currentPieceOnsquare.value().type == KING) {
+		_kings[currentPieceOnsquare.value().color] = EMPTY;
 	}
 
 	_board[static_cast<int>(sq)] = {color, type};
@@ -253,16 +251,16 @@ void Chess::_updateCastlingRights() {
 void Chess::_updateEnPassantSquare() {
 	if (_epSquare == EMPTY) return;
 
-	const square startSquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
-	const square currentSquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
+	const square startsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
+	const square currentsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 
-	const std::array<int, 2> attackers = {static_cast<int>(currentSquare) + 1, static_cast<int>(currentSquare) - 1};
+	const std::array<int, 2> attackers = {static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1};
 
-	const std::optional<piece> stsq = _board[static_cast<int>(startSquare)];
+	const std::optional<piece> stsq = _board[static_cast<int>(startsquare)];
 	const std::optional<piece> epsq = _board[_epSquare];
 	if (stsq.has_value() || epsq.has_value() ||
-		_board[static_cast<int>(currentSquare)].value().color != swapColor(_turn) ||
-		_board[static_cast<int>(currentSquare)].value().type != PAWN) {
+		_board[static_cast<int>(currentsquare)].value().color != swapColor(_turn) ||
+		_board[static_cast<int>(currentsquare)].value().type != PAWN) {
 		_epSquare = EMPTY;
 		return;
 	}
@@ -327,6 +325,266 @@ bool Chess::_isKingAttacked(color c) {
 	const square sq = static_cast<square>(_kings.at(c));
 	return static_cast<int>(sq) == -1 ? false : _attacked(swapColor(c), sq);
 }
+std::vector<internalMove> Chess::_moves(std::optional<bool> legal, std::optional<pieceSymbol> piece, std::optional<square> sq) {
+	std::vector<internalMove> moves;
+	color us = _turn;
+	color them = swapColor(us);
+
+	square firstSquare = sq ? *sq : square::a1;
+	square lastSquare = sq ? *sq : square::h8;
+	bool singleSquare = false;
+
+	if (sq) {
+		singleSquare = true;
+	}
+
+	// Iterate over the board squares
+	for (int from = static_cast<int>(firstSquare); from <= static_cast<int>(lastSquare); ++from) {
+		// Skip invalid squares (0x88 issue)
+		if (from & 0x88) {
+			from += 7;
+			continue;
+		}
+
+		// Skip empty square or opponent's pieces (unless it's a capture)
+		if (!_board[from] || _board[from]->color == them) {
+			continue;
+		}
+
+		auto pieceType = _board[from]->type;
+
+		// Skip if the piece doesn't match the `piece` argument, if provided
+		if (piece && *piece != pieceType) {
+			continue;
+		}
+
+		// Handle the specific piece moves (PAWN, KNIGHT, etc.)
+		if (pieceType == pieceSymbol::p) {
+			if (piece) {
+				if (*piece != pieceSymbol::p) continue;
+			}
+
+			// Handle pawn's non-capturing and capturing moves
+			for (auto offset : PAWN_OFFSETS.at(us)) {
+				int to = from + offset;
+				if (to & 0x88) continue;  // Skip invalid squares
+
+				if (&_board[to].value() == nullptr) {
+					addMove(moves, us, from, to, pieceSymbol::p, std::nullopt);
+				}
+				// Handle pawn captures (both normal and en passant)
+				for (int j = 2; j < 4; ++j) {
+					to = from + PAWN_OFFSETS.at(us)[j];
+					if (to & 0x88) continue;
+
+					if (_board[to] && _board[to]->color == them) {
+						addMove(moves, us, from, to, pieceSymbol::p, _board[to]->type, BITS.at("CAPTURE"));
+					}
+					else if (to == _epSquare) {
+						addMove(moves, us, from, to, pieceSymbol::p, pieceSymbol::p, BITS.at("EP_CAPTURE"));
+					}
+				}
+			}
+		}
+		else {
+			// Handle non-pawn piece moves (KNIGHT, ROOK, etc.)
+			if (piece) {
+				if (*piece != pieceType) continue;
+			}
+
+			// Loop through offsets for the piece type
+			for (const auto& offset : PIECE_OFFSETS.at(pieceType)) {
+				int to = from;
+
+				// Handle sliding pieces (ROOK, BISHOP, QUEEN)
+				while (true) {
+					to += offset;
+					if (to & 0x88) break;  // Skip invalid squares
+
+					if (!_board[to]) {
+						addMove(moves, us, from, to, pieceType, std::nullopt);
+					}
+					else {
+						// Stop if own piece (except for knights and kings)
+						if (_board[to]->color == us) break;
+
+						addMove(moves, us, from, to, pieceType, _board[to]->type, BITS.at("CAPTURE"));
+						break;  // Stop after capture
+					}
+
+					// Knights and Kings move differently (don't slide)
+					if (pieceType == pieceSymbol::n || pieceType == pieceSymbol::k) break;
+				}
+			}
+		}
+	}
+
+	// Handle special cases (e.g., castling)
+	if (piece == std::nullopt || *piece == pieceSymbol::k) {
+		// Handle king-side and queen-side castling
+		if (_castling[us] & BITS.at("KSIDE_CASTLE")) {
+			// logic for castling
+		}
+		if (_castling[us] & BITS.at("QSIDE_CASTLE")) {
+			// logic for castling
+		}
+	}
+
+	// If 'legal' is provided, filter out illegal moves
+	if (legal && *legal) {
+		std::vector<internalMove> legalMoves;
+		for (const auto& move : moves) {
+			_makeMove(move);
+			if (!_isKingAttacked(us)) {
+				legalMoves.push_back(move);
+			}
+			_undoMove();
+		}
+		return legalMoves;
+	}
+
+	return moves;  // Return all moves (legal and pseudo-legal)
+}
+
+
+void Chess::_push(internalMove move) {
+	_history.push_back({
+		move,
+		{{color::b, _kings.at(color::b)}, {color::w, _kings.at(color::w)}},
+		_turn,
+		{{color::b, _castling.at(color::b)}, {color::w, _castling.at(color::w)}},
+		_epSquare,
+		_halfMoves,
+		_moveNumber
+	});
+}
+
+void Chess::_makeMove(internalMove m) {
+	const color us = _turn;
+	const color them = swapColor(us);
+	_push(m);
+
+	_board[m.to] = _board[m.from];
+	std::remove(_board.begin(), _board.end(), m.from);
+
+	if (m.flags & BITS.at("EP_CAPTURE")) {
+		if (_turn == BLACK) {
+			std::remove(_board.begin(), _board.end(), m.to - 16);
+		}
+		else {
+			std::remove(_board.begin(), _board.end(), m.to + 16);
+		}
+	}
+	if (m.promotion) {
+		_board[m.to] = { us, m.promotion.value()};
+	}
+	if (_board[m.to].value().type == KING) {
+		_kings.at(us) = m.to;
+
+		if (m.flags & BITS.at("KSIDE_CASTLE")) {
+			const int castlingTo = m.to - 1;
+			const int castlingFrom = m.to + 1;
+			_board[castlingTo] = _board[castlingFrom];
+			std::remove(_board.begin(), _board.end(), m.from);
+		}
+		else if (m.flags & BITS.at("QSIDE_CASTLE")) {
+			const int castlingTo = m.to + 1;
+			const int castlingFrom = m.to - 2;
+			_board[castlingTo] = _board[castlingFrom];
+			std::remove(_board.begin(), _board.end(), m.from);
+		}
+
+		_castling.at(us) = 0;
+	}
+	if (_castling.at(us) != 0) {
+		for (int i = 0, len = ROOKS.at(us).size(); i < len; i++) {
+			if (
+				m.from == ROOKS.at(us)[i].square &&
+				_castling.at(us) & ROOKS.at(us)[i].flag
+				) {
+				_castling.at(us) ^= ROOKS.at(us)[i].flag;
+				break;
+			}
+		}
+	}
+	if (_castling.at(them) != 0) {
+		for (int i = 0, len = ROOKS.at(us).size(); i < len; i++) {
+			if (
+				m.from == ROOKS.at(them)[i].square &&
+				_castling.at(them) & ROOKS.at(them)[i].flag
+				) {
+				_castling.at(them) ^= ROOKS.at(them)[i].flag;
+				break;
+			}
+		}
+	}
+	if (m.flags & BITS.at("BIG_PAWN")) {
+		if (us == BLACK) {
+			_epSquare = m.to - 16;
+		}
+		else {
+			_epSquare = m.to + 16;
+		}
+	}
+	else {
+		_epSquare = EMPTY;
+	}
+	if (us == BLACK) {
+		_moveNumber++;
+	}
+	_turn = them;
+}
+
+std::optional<internalMove> Chess::_undoMove() {
+	const History old = _history.back();
+	_history.pop_back();
+
+	const internalMove m = old.move;
+
+	_kings = old.kings;
+	_turn = old.turn;
+	_castling = old.castling;
+	_epSquare = old.epSquare;
+	_halfMoves = old.halfMoves;
+	_moveNumber = old.moveNumber;
+
+	const color us = _turn;
+	const color them = swapColor(us);
+
+	_board[m.from] = _board[m.to];
+	_board[m.from].value().type = m.piece;
+	std::remove(_board.begin(), _board.end(), m.to);
+
+	if (m.captured) {
+		if (m.flags & BITS.at("EP_CAPTURE")) {
+			int index;
+			if (us == BLACK) {
+				index = m.to - 16;
+			}
+			else {
+				index = m.to + 16;
+			}
+			_board[index] = { them, PAWN };
+		}
+		else {
+			_board[m.to] = {them, m.captured.value()};
+		}
+	}
+	if (m.flags & (BITS.at("KSIDE_CASTLE") | BITS.at("QSIDE_CASTLE"))) {
+		int castlingTo, castlingFrom;
+		if (m.flags & BITS.at("KSIDE_CASTLE")) {
+			castlingTo = m.to + 1;
+			castlingFrom = m.to - 1;
+		}
+		else {
+			castlingTo = m.to - 2;
+			castlingFrom = m.to + 1;
+		}
+		_board[castlingTo] = _board[castlingFrom];
+		std::remove(_board.begin(), _board.end(), castlingFrom);
+	}
+	return m;
+}
 
 void Chess::clear(std::optional<bool> preserveHeaders) {
 	_board = std::array<std::optional<piece>, 128>();
@@ -346,7 +604,7 @@ void Chess::clear(std::optional<bool> preserveHeaders) {
 }
 
 void Chess::removeHeader(std::string key) {
-	if (_header.find(key) != _header.end()) {
+	if (_header.count(key) > 0) {
 		_header.erase(key);
 	}
 }
@@ -428,7 +686,7 @@ bool Chess::inSufficientMaterial() {
 	 * k.b. vs k.n. with mate in 1:
 	 * 8/8/8/8/1n6/8/B7/K1k5 b - - 2 1
 	 */
-	const std::map<pieceSymbol, int> pieces = {
+	std::map<pieceSymbol, int> pieces = {
 		{pieceSymbol::b, 0},
 		{pieceSymbol::n, 0},
 		{pieceSymbol::r, 0},
@@ -448,7 +706,80 @@ bool Chess::inSufficientMaterial() {
 		}
 
 		if (_board[i].has_value()) {
-
+			pieces.at(_board[i].value().type) = pieces.count(_board[i].value().type) > 0 ? pieces.at(_board[i].value().type) + 1 : 1;
+			if (_board[i].value().type == BISHOP) {
+				bishops.push_back(squareColor);
+			}
+			numPieces++;
 		}
 	}
+
+	if (numPieces == 2) {
+		return true;
+	}
+	else if (numPieces == 3 && (pieces.at(BISHOP) == 1 || pieces.at(KNIGHT) == 1)) {
+		return true;
+	}
+	else if (numPieces == pieces.at(BISHOP) + 2) {
+		int sum = 0;
+		const int len = bishops.size();
+		for (int i = 0; i < len; i++) {
+			sum += bishops[i];
+		}
+		if (sum == 0 || sum == len) {
+			return true;
+		}
+	}
+	return false;
 }
+
+bool Chess::isThreefoldRepetition() {
+	return _getPositionCount(fen()) >= 3;
+}
+
+bool Chess::isDraw() {
+	return (
+		_halfMoves >= 100 ||
+		isStalemate() ||
+		inSufficientMaterial() ||
+		isThreefoldRepetition()
+	);
+}
+
+bool Chess::isGameOver() {
+	return isCheckmate() || isStalemate() || isDraw();
+}
+
+std::vector<move> Chess::moves(std::optional<square> sq, std::optional<pieceSymbol> piece, bool verbose) {
+	// 1. Generate internal moves based on square and piece filtering
+	std::vector<internalMove> generatedMoves = _moves(true, piece, sq); // Assuming _moves filters moves
+
+	std::vector<move> result;
+
+	// 2. Convert each internalMove to a move (for SAN, LAN, etc.)
+	for (const auto& internal: generatedMoves) {
+		move mv;
+
+		// Copy relevant data from internalMove to move
+		mv.color = internal.color;
+		mv.from = static_cast<square>(internal.from); // Assuming square is an integer
+		mv.to = static_cast<square>(internal.to); // Assuming square is an integer
+		mv.piece = internal.piece;
+		mv.captured = internal.captured;
+		mv.promotion = internal.promotion;
+		mv.flags = internal.flags;
+
+		// 3. Apply verbose or SAN/LAN formatting
+		if (verbose) {
+			mv.san = _makePretty(internal).san; // Custom function for verbose format
+		}
+		else {
+			mv.san = _moveToSan(internal, generatedMoves); // Standard algebraic notation
+		}
+
+		result.push_back(mv);
+	}
+
+	return result;
+}
+
