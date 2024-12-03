@@ -35,6 +35,11 @@ enum class pieceSymbol : int {
     p, n, b, r, q ,k
 };
 
+struct moveOption {
+    square from;
+    square to;
+};
+
 #define PAWN pieceSymbol::p
 #define ROOK pieceSymbol::r
 #define KNIGHT pieceSymbol::n
@@ -80,7 +85,7 @@ typedef struct move  {
     pieceSymbol piece;
     std::optional<pieceSymbol> captured;
     std::optional<pieceSymbol> promotion;
-    int flags;
+    std::string flags;
     std::string san;
     std::string lan;
     std::string before;
@@ -183,9 +188,9 @@ const std::string SYMBOLS = "pnbrqkPNBRQK";
 
 const std::array<pieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
-const std::map<pieceSymbol, std::string> SIDES = {
-    {KING, "KSIDE_CASTLE"},
-    {QUEEN, "QSIDE_CASTLE"}
+const std::map<pieceSymbol, int> SIDES = {
+    {KING, BITS.at("KSIDE_CASTLE")},
+    {QUEEN, BITS.at("QSIDE_CASTLE")}
 };
 
 struct RookPosition {
@@ -195,12 +200,12 @@ struct RookPosition {
 
 const std::map<color, std::vector<RookPosition>> ROOKS = {
     {color::w, {
-        {0, "QSIDE_CASTLE"},
-        {7, "KSIDE_CASTLE"}
+        {0, BITS.at("QSIDE_CASTLE")},
+        {7, BITS.at("KSIDE_CASTLE")}
     }},
     {color::b, {
-        {56, "QSIDE_CASTLE"},
-        {63, "KSIDE_CASTLE"}
+        {56, BITS.at("QSIDE_CASTLE")},
+        {63, BITS.at("KSIDE_CASTLE")}
     }}
 };
 

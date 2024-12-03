@@ -8,7 +8,6 @@
 #ifndef CHESS_H
 #define CHESS_H
 
-#include "types.h"
 #include "board.h"
 class Chess {
 private:
@@ -113,15 +112,15 @@ public:
 
 	std::vector<move> Chess::moves(std::optional<square> sq, std::optional<pieceSymbol> piece, bool verbose);
 
-	void cmove(std::string move, bool strict = false);
+	move cmove(std::string move, bool strict = false);
 
-	void cmove(std::tuple<std::string, std::string, std::optional<std::string>> moveOptions, bool strict = false);
+	move cmove(moveOption move, bool strict = false);
 	
 	move undo();
 	
 	std::string pgn(char newline = '\n', int maxWidth = 0);
 	
-	std::map<std::string, std::string> header(const std::vector<std::string>& args);
+	std::map<std::string, std::string> header(const std::vector<std::string>& args, ...);
 	
 	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
 
