@@ -1,13 +1,55 @@
 #include "../include/chess.h"
-#include "../include/strfcns.h"
 #include <cmath>
 #include <tuple>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <cctype>
+#include <regex>
 #include <functional>
 #include <algorithm>
 #include <iomanip>
 #include <bitset>
 #include <stdexcept>
 #include <iterator>
+
+std::vector<std::string> split(const std::string& str, char delimiter) {
+	std::vector<std::string> tokens;
+	std::stringstream ss(str);
+	std::string token;
+
+	while (std::getline(ss, token, delimiter)) {
+		tokens.push_back(token);
+	}
+
+	return tokens;
+}
+
+std::vector<std::string> splitWithRegex(const std::string& str, const std::string& pattern) {
+	std::regex re(pattern);
+	std::sregex_token_iterator it(str.begin(), str.end(), re, -1); // -1 means "split by the regex"
+	std::sregex_token_iterator end;
+
+	return { it, end };
+}
+
+std::string join(const std::vector<std::string>& elements, const std::string& delimiter) {
+	std::string result;
+
+	for (size_t i = 0; i < elements.size(); ++i) {
+		result += elements[i];
+		if (i < elements.size() - 1) {
+			result += delimiter;
+		}
+	}
+
+	return result;
+}
+
+bool isDigit(std::string c) {
+	std::string str = "0123456789";
+	return str.find(c) != std::string::npos;
+}
 
 std::map<pieceSymbol, char>  ptoc = {
 	{PAWN, 'p'}, {ROOK, 'r'}, {BISHOP, 'b'}, {KNIGHT, 'n'}, {QUEEN, 'q'}, {KING, 'k'}
@@ -91,7 +133,7 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	return "";
 }
 
-void addMove(std::vector<internalMove> moves, color color, int from, int to, pieceSymbol p, std::optional<pieceSymbol> captured, int flags = BITS.at("NORMAL")) {
+void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, std::optional<pieceSymbol> captured, int flags = BITS.at("NORMAL")) {
 	const int r = rank(to);
 	if (p == PAWN && (r == RANK_1 || r == RANK_8)) {
 		for (int i = 0; i < PROMOTIONS.size(); i++) {
@@ -131,6 +173,8 @@ std::string replaceSubstring(const std::string& str, const std::string& from, co
 std::map<char, pieceSymbol> strPchrs = {
 	{'p', pieceSymbol::p}, {'r', pieceSymbol::r}, {'b', pieceSymbol::b}, {'n', pieceSymbol::n}, {'q', pieceSymbol::q}, {'k', pieceSymbol::k}
 };
+
+std::map<color, char> ctoc = { {WHITE, 'w'}, {BLACK, 'b'} };
 
 std::optional<pieceSymbol> inferPieceType(std::string san) {
 	char pieceType = san.at(0);
@@ -423,6 +467,16 @@ std::vector<internalMove> Chess::_moves(std::optional<bool> legal, std::optional
 	return moves;  // Return all moves (legal and pseudo-legal)
 }
 
+std::optional<move> Chess::undo() {
+	std::optional<internalMove> m = _undoMove();
+	if (m) {
+		move prettyMove = _makePretty(m.value());
+		_decPositionCount(prettyMove.after);
+		return prettyMove;
+	}
+	return std::nullopt;
+}
+
 std::string Chess::_moveToSan(internalMove m, std::vector<internalMove> moves) {
 	std::string output = "";
 
@@ -517,7 +571,7 @@ void Chess::_makeMove(internalMove m) {
 		_castling.at(us) = 0;
 	}
 	if (_castling.at(us) != 0) {
-		for (int i = 0, len = ROOKS.at(us).size(); i < len; i++) {
+		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
 			if (
 				m.from == ROOKS.at(us)[i].square &&
 				_castling.at(us) & ROOKS.at(us)[i].flag
@@ -528,7 +582,7 @@ void Chess::_makeMove(internalMove m) {
 		}
 	}
 	if (_castling.at(them) != 0) {
-		for (int i = 0, len = ROOKS.at(us).size(); i < len; i++) {
+		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
 			if (
 				m.from == ROOKS.at(them)[i].square &&
 				_castling.at(them) & ROOKS.at(them)[i].flag
@@ -695,7 +749,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 				width = 0;
 			}
 			result.push_back(token);
-			width += token.size();
+			width += static_cast<int>(token.size());
 			result.push_back(" ");
 			width++;
 		}
@@ -718,11 +772,36 @@ std::string Chess::pgn(char newline, int maxWidth) {
 			currentWidth++;
 		}
 		result.push_back(moves[i]);
-		currentWidth += moves[i].size();
+		currentWidth += static_cast<int>(moves[i].size());
 	}
 	return join(result, "");
 }
 
+std::optional<std::string> Chess::squareColor(square sq) {
+	if (Ox88.count(sq) > 0) {
+		int squ = Ox88[sq];
+		return (rank(squ) + file(squ)) % 2 == 0 ? "light" : "dark";
+	}
+	return std::nullopt;
+}
+
+color Chess::turn() {
+	return _turn;
+}
+
+piece Chess::remove(square sq) {
+	std::optional<piece> p = get(sq);
+	_board[Ox88[sq]] = std::nullopt;
+	if (p && p.value().type == KING) {
+		_kings[p.value().color] = EMPTY;
+	}
+
+	_updateCastlingRights();
+	_updateEnPassantSquare();
+	_updateSetup(fen());
+
+	return p.value();
+}
 
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	auto mask = [&](std::string str) -> std::string {
@@ -868,6 +947,10 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	std::regex ravRegex("(\\([^()]+\\))+?");
 }
 
+std::optional<piece> Chess::get(square sq) {
+	return _board[static_cast<int>(sq)] ? _board[static_cast<int>(sq)] : std::nullopt;
+}
+
 std::optional<internalMove> Chess::_moveFromSan(std::string move, bool strict) {
 	const std::string cleanMove = strippedSan(move);
 
@@ -926,7 +1009,7 @@ std::optional<internalMove> Chess::_moveFromSan(std::string move, bool strict) {
 	if (!to.has_value()) {
 		return std::nullopt;
 	}
-	for (int i = 0, len = moves.size(); i < len; i++) {
+	for (int i = 0, len = static_cast<int>(moves.size()); i < len; i++) {
 		if (!from.has_value()) {
 			if (cleanMove == replaceSubstring(strippedSan(_moveToSan(moves[i], moves)), "x", "")) {
 				return moves[i];
@@ -944,6 +1027,31 @@ std::optional<internalMove> Chess::_moveFromSan(std::string move, bool strict) {
 	}
 	return std::nullopt;
 }
+
+int Chess::_getPositionCount(std::string fen) {
+	std::string trimmedFen = trimFen(fen);
+	return _positionCount.at(trimmedFen).has_value() ? _positionCount.at(trimmedFen).value() : 0;
+}
+
+void Chess::_incPositionCount(std::string fen) {
+	std::string trimmedFen = trimFen(fen);
+	if (!_positionCount.at(trimmedFen).has_value()) {
+		_positionCount.at(trimmedFen).value() = 0;
+	}
+	_positionCount.at(trimmedFen).value() += 1;
+}
+
+void Chess::_decPositionCount(std::string fen) {
+	std::string trimmedFen = trimFen(fen);
+	if (!_positionCount.at(trimmedFen).has_value()) {
+		_positionCount.at(trimmedFen) = std::nullopt;
+	}
+	else {
+		_positionCount.at(trimmedFen).value() -= 1;
+	}
+}
+
+
 
 std::string Chess::ascii() {
 	std::string s = "   +------------------------+\n";
@@ -971,12 +1079,98 @@ std::string Chess::ascii() {
 	return s;
 }
 
+std::string Chess::fen() {
+	int empty = 0;
+	std::string fen = "";
+
+	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+		if (_board[i]) {
+			if (empty > 0) {
+				fen += (char)(empty);
+				empty = 0;
+			}
+			color c = _board[i].value().color;
+			pieceSymbol type = _board[i].value().type;
+
+			fen += c == WHITE ? std::toupper(ptoc.at(type)) : std::tolower(ptoc.at(type));
+		}
+		else {
+			empty++;
+		}
+
+		if ((i + 1) & 0x88) {
+			if (empty > 0) {
+				fen += (char)(empty);
+			}
+			if (i != Ox88.at(square::h1)) {
+				fen += '/';
+			}
+
+			empty = 0;
+			i += 8;
+		}
+	}
+		
+	std::string castling = "";
+	if (_castling[WHITE] & BITS.at("KSIDE_CASTLE")) {
+		castling += 'K';
+	}
+	if (_castling[WHITE] & BITS.at("QSIDE_CASTLE")) {
+		castling += 'Q';
+	}
+	if (_castling[BLACK] & BITS.at("KSIDE_CASTLE")) {
+		castling += 'k';
+	}
+	if (_castling[BLACK] & BITS.at("QSIDE_CASTLE")) {
+		castling += 'q';
+	}
+
+	castling = castling.empty() ? "-" : castling;
+
+	std::string epSquare = "-";
+
+	if (_epSquare != EMPTY) {
+		square bigPawnSquare = static_cast<square>(_epSquare + (_turn == WHITE ? 16 : -16));
+		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
+		for (auto& sq : squares) {
+			if (sq & 0x88) {
+				continue;
+			}
+			color ct = _turn;
+
+			if (
+				_board.at(sq).value().color == ct &&
+				_board.at(sq).value().type == PAWN
+				) {
+				_makeMove({
+					ct,
+					sq,
+					_epSquare,
+					PAWN,
+					PAWN,
+					std::nullopt,
+					BITS.at("EP_CAPTURE")
+					});
+				bool isLegal = !_isKingAttacked(ct);
+				_undoMove();
+
+				if (isLegal) {
+					epSquare = squareToString(algebraic(_epSquare));
+					break;
+				}
+			}
+		}
+	}
+	std::vector<std::string> elements = { fen, std::string(1, ctoc.at(_turn)), castling, epSquare, std::to_string(_halfMoves), std::to_string(_moveNumber) };
+	return join(elements, " ");
+}
+
 int Chess::perft(int depth) {
 	const std::vector<internalMove> moves = _moves(false);
 	int nodes = 0;
 	color c = _turn;
 
-	for (int i = 0, len = moves.size() ; i < len; i++) {
+	for (int i = 0, len = static_cast<int>(moves.size()) ; i < len; i++) {
 		_makeMove(moves[i]);
 		if (!_isKingAttacked(c)) {
 			if (depth - 1 > 0) {
@@ -1051,6 +1245,12 @@ void Chess::removeHeader(std::string key) {
 	}
 }
 
+std::map<std::string, std::string> Chess::header(std::vector<std::string> args ...) {
+	for (int i = 0; i < static_cast<int>(args.size()); i += 2) {
+		_header[args[i]] = args[i + 1];
+	}
+	return _header;
+}
 
 void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	std::vector<std::string> tokens = splitWithRegex(fen, "\\s+");
@@ -1166,7 +1366,7 @@ bool Chess::inSufficientMaterial() {
 	}
 	else if (numPieces == pieces.at(BISHOP) + 2) {
 		int sum = 0;
-		const int len = bishops.size();
+		const int len = static_cast<int>(bishops.size());
 		for (int i = 0; i < len; i++) {
 			sum += bishops[i];
 		}
@@ -1194,36 +1394,77 @@ bool Chess::isGameOver() {
 	return isCheckmate() || isStalemate() || isDraw();
 }
 
+bool Chess::put(pieceSymbol type, color c, square sq) {
+	if (_put(type, c, sq)) {
+		_updateCastlingRights();
+		_updateEnPassantSquare();
+		_updateSetup(fen());
+		return true;
+	}
+	return false;
+}
+
 std::vector<move> Chess::moves(std::optional<square> sq, std::optional<pieceSymbol> piece, bool verbose) {
-	// 1. Generate internal moves based on square and piece filtering
-	std::vector<internalMove> generatedMoves = _moves(true, piece, sq); // Assuming _moves filters moves
+	std::vector<internalMove> generatedMoves = _moves(true, piece, sq);
 
 	std::vector<move> result;
-
-	// 2. Convert each internalMove to a move (for SAN, LAN, etc.)
 	for (const auto& internal: generatedMoves) {
 		move mv;
 
-		// Copy relevant data from internalMove to move
 		mv.color = internal.color;
-		mv.from = static_cast<square>(internal.from); // Assuming square is an integer
-		mv.to = static_cast<square>(internal.to); // Assuming square is an integer
+		mv.from = static_cast<square>(internal.from);
+		mv.to = static_cast<square>(internal.to);
 		mv.piece = internal.piece;
 		mv.captured = internal.captured;
 		mv.promotion = internal.promotion;
 		mv.flags = internal.flags;
 
-		// 3. Apply verbose or SAN/LAN formatting
 		if (verbose) {
-			mv.san = _makePretty(internal).san; // Custom function for verbose format
+			mv.san = _makePretty(internal).san;
 		}
 		else {
-			mv.san = _moveToSan(internal, generatedMoves); // Standard algebraic notation
+			mv.san = _moveToSan(internal, generatedMoves);
 		}
 
 		result.push_back(mv);
 	}
 
 	return result;
+}
+
+void Chess::_pruneComments() {
+	std::vector<std::optional<internalMove>> reservedHistory = {};
+	std::map<std::string, std::string> currentComments = {};
+
+	const auto copyComment = [&](std::string fen) -> void {
+		if (_comments.count(fen) > 0) {
+			currentComments.at(fen) = _comments.at(fen);
+		}
+	};
+
+	while (_history.size() > 0) {
+		reservedHistory.push_back(_undoMove());
+	}
+
+	copyComment(fen());
+
+	while (true) {
+		std::optional<internalMove> m = reservedHistory[reservedHistory.size() - 1];
+		if (!m) break;
+		_makeMove(m.value());
+		copyComment(fen());
+	}
+	_comments = currentComments;
+}
+
+std::pair<bool, bool> Chess::getCastlingRights(color c) {
+	return {
+		(_castling[c] & SIDES.at(KING)) != 0,
+		(_castling[c] & SIDES.at(QUEEN)) != 0
+	};
+}
+
+int Chess::moveNumber() {
+	return _moveNumber;
 }
 

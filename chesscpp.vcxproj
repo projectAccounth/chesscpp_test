@@ -127,13 +127,11 @@
   <ItemGroup>
     <ClInclude Include="include\board.h" />
     <ClInclude Include="include\chess.h" />
-    <ClInclude Include="include\strfcns.h" />
     <ClInclude Include="include\types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\board.cpp" />
     <ClCompile Include="src\chess.cpp" />
-    <ClCompile Include="src\strfcns.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

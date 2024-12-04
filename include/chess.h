@@ -23,7 +23,7 @@ private:
 	std::map<std::string, std::string> _comments;
 	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
 
-	std::map<color, int> _positionCount;
+	std::map<std::string, std::optional<int>> _positionCount;
 
 	void _updateSetup(std::string fen);
 
@@ -82,11 +82,11 @@ public:
 
 	void reset();
 
-	int get(square sq);
+	std::optional<piece> get(square sq);
 
-	bool put(pieceSymbol type, color color, square sq);
+	bool put(pieceSymbol type, color c, square sq);
 
-	int remove();
+	piece remove(square sq);
 
 	bool isAttacked(square sq, color attackedBy);
 
@@ -116,11 +116,11 @@ public:
 
 	move cmove(moveOption move, bool strict = false);
 	
-	move undo();
+	std::optional<move> undo();
 	
 	std::string pgn(char newline = '\n', int maxWidth = 0);
 	
-	std::map<std::string, std::string> header(const std::vector<std::string>& args, ...);
+	std::map<std::string, std::string> header(std::vector<std::string> args ...);
 	
 	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
 
@@ -140,7 +140,8 @@ public:
 	
 	std::vector<std::string> historys(bool verbose = true);
 
-	bool getCastlingRights(color color);
+	// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
+	std::pair<bool, bool> getCastlingRights(color color);
 
 	int moveNumber();
 };
