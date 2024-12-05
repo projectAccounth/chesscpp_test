@@ -36,8 +36,9 @@ enum class pieceSymbol : int {
 };
 
 struct moveOption {
-    square from;
-    square to;
+    std::string from;
+    std::string to;
+    std::optional<std::string> promotion;
 };
 
 #define PAWN pieceSymbol::p
@@ -82,7 +83,7 @@ typedef struct move  {
     color color;
     square from;
     square to;
-    pieceSymbol piece;
+    std::optional<pieceSymbol> piece;
     std::optional<pieceSymbol> captured;
     std::optional<pieceSymbol> promotion;
     std::string flags;

@@ -368,21 +368,21 @@ std::vector<internalMove> Chess::_moves(std::optional<bool> legal, std::optional
 		}
 
 		// Skip empty square or opponent's pieces (unless it's a capture)
-		if (!_board[from] || _board[from]->color == them) {
+		if (!_board[from] || _board[from].value().color == them) {
 			continue;
 		}
 
-		auto pieceType = _board[from]->type;
+		pieceSymbol pieceType = _board[from].value().type;
 
 		// Skip if the piece doesn't match the `piece` argument, if provided
-		if (p && *p != pieceType) {
+		if (p && p.value() != pieceType) {
 			continue;
 		}
 
 		// Handle the specific piece moves (PAWN, KNIGHT, etc.)
 		if (pieceType == pieceSymbol::p) {
 			if (p) {
-				if (*p != pieceSymbol::p) continue;
+				if (p.value() != pieceSymbol::p) continue;
 			}
 
 			// Handle pawn's non-capturing and capturing moves
@@ -390,7 +390,7 @@ std::vector<internalMove> Chess::_moves(std::optional<bool> legal, std::optional
 				int to = from + offset;
 				if (to & 0x88) continue;  // Skip invalid squares
 
-				if (&_board[to].value() == nullptr) {
+				if (!_board[to]) {
 					addMove(moves, us, from, to, pieceSymbol::p, std::nullopt);
 				}
 				// Handle pawn captures (both normal and en passant)
@@ -789,11 +789,14 @@ color Chess::turn() {
 	return _turn;
 }
 
-piece Chess::remove(square sq) {
+std::optional<piece> Chess::remove(square sq) {
 	std::optional<piece> p = get(sq);
 	_board[Ox88[sq]] = std::nullopt;
 	if (p && p.value().type == KING) {
 		_kings[p.value().color] = EMPTY;
+	}
+	else if (!p) {
+		return std::nullopt;
 	}
 
 	_updateCastlingRights();
@@ -1051,7 +1054,42 @@ void Chess::_decPositionCount(std::string fen) {
 	}
 }
 
+move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool strict) {
+	std::optional <internalMove> moveObj;
+	if (std::holds_alternative<std::string>(moveArg)) {
+		moveObj = _moveFromSan(std::get<std::string>(moveArg), strict);
+	}
+	else {
+		std::vector<internalMove> moves = _moves();
+		moveOption o = std::get<moveOption>(moveArg);
+		move m = {
+			_turn,
+			stringToSquare(o.from),
+			stringToSquare(o.to),
+			std::nullopt,
+			std::nullopt,
+			strPchrs.at(o.promotion.value()[0])
+		};
+		for (int i = 0; i < static_cast<int>(moves.size()); i++) {
+			if (
+				m.from == algebraic(moves[i].from) &&
+				m.to == algebraic(moves[i].to) &&
+				(!(moves[i].promotion) || m.promotion == moves[i].promotion)
+				) {
+				moveObj = moves[i];
+				break;
+			}
+		}
+	}
 
+	if (!moveObj) {
+		throw std::exception("Invalid move");
+	}
+
+	move prettyMove = _makePretty(moveObj.value());
+	_incPositionCount(prettyMove.after);
+	return prettyMove;
+}
 
 std::string Chess::ascii() {
 	std::string s = "   +------------------------+\n";
@@ -1300,6 +1338,36 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 			square++;
 		}
 	}
+}
+
+std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> Chess::board() {
+	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> output = {};
+	std::vector<std::optional<std::tuple<square, pieceSymbol, color>>> row = {};
+
+	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+		if (!_board[i]) {
+			row.push_back(std::nullopt);
+		}
+		else {
+			row.push_back(std::tuple<square, pieceSymbol, color>{
+				algebraic(i),
+				_board[i].value().type,
+				_board[i].value().color
+			});
+		}
+		if ((i + 1) & 0x88) {
+			std::vector<std::tuple<square, pieceSymbol, color>> trow;
+			for (const auto& elem : row) {
+				if (elem.has_value()) {
+					trow.push_back(elem.value());
+				}
+			}
+			output.push_back(std::move(trow));
+			row = {};
+			i += 8;
+		}
+	}
+	return output;
 }
 
 bool Chess::isAttacked(square sq, color attackedBy) {
