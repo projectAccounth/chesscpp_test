@@ -1,7 +1,15 @@
-#pragma once
-
 #ifndef TYPES_H
 #define TYPES_H
+
+#ifndef __cplusplus
+#error "This library is C++-based. Please use C++ (C++17 or above) for this library."
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER < 1914)
+#error "This library requires C++17 or later. Update to Visual Studio 2017 version 15.7 or later."
+#elif !defined(_MSC_VER) && (__cplusplus < 201703L)
+#error "This library requires C++17 or later. Please use a compatible compiler or use C++17 standard with the --std=c++17 option."
+#endif
 
 #include <optional>
 #include <string>

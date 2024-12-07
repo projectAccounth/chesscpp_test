@@ -15,18 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\board.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\chess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\board.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\chess.h">
+    <ClInclude Include="include\chesscpp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\types.h">

@@ -1,65 +1,31 @@
-#pragma once
-
 /*
 * Main include file for chesscpp
 * 
 * \file chess.h
 */
-#ifndef CHESS_H
-#define CHESS_H
+#ifndef CHESSCPP_H
+#define CHESSCPP_H
 
-#include "board.h"
+#ifndef __cplusplus
+#error "This library is C++-based. Please use C++ (C++17 or above) for this library."
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER < 1914)
+#error "This library requires C++17 or later. Update to Visual Studio 2017 version 15.7 or later."
+#elif !defined(_MSC_VER) && (__cplusplus < 201703L)
+#error "This library requires C++17 or later. Please use a compatible compiler or use C++17 standard with the --std=c++17 option."
+#endif
+
+#include <utility>
+
+#include "types.h"
+
+std::pair<bool, std::string> validateFen(std::string fen);
+
 class Chess {
-private:
-
-	std::array<std::optional<piece>, 128> _board;
-	color _turn = WHITE;
-	std::map<std::string, std::string> _header;
-	std::map<color, int> _kings = { { color::w, EMPTY }, { color::b, EMPTY } };
-	int _epSquare = -1;
-	int _halfMoves = -1;
-	int _moveNumber = 0;
-	std::vector<History> _history;
-	std::map<std::string, std::string> _comments;
-	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
-
-	std::map<std::string, std::optional<int>> _positionCount;
-
-	void _updateSetup(std::string fen);
-
-	bool _put(pieceSymbol type, color color, square sq);
-
-	void _updateCastlingRights();
-
-	void _updateEnPassantSquare();
-
-	bool _attacked(color c, square sq);
-
-	bool _isKingAttacked(color c);
-
-	std::vector<internalMove> _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<square> square = std::nullopt);
-
-	void _push(internalMove move);
-
-	void _makeMove(internalMove move);
-
-	std::optional<internalMove> _undoMove();
-
-	std::string _moveToSan(internalMove move, std::vector<internalMove> moves);
-
-	std::optional<internalMove> _moveFromSan(std::string move, bool strict = false);
-
-	move _makePretty(internalMove uglyMove);
-	
-	int _getPositionCount(std::string fen);
-
-	void _incPositionCount(std::string fen);
-
-	void _decPositionCount(std::string fen);
-
-	void _pruneComments();
-	
-
+private:	
+	class chrImpl;
+	chrImpl* chImpl;
 public:
 	// Clear.
 	void clear(std::optional<bool> preserveHeaders);
@@ -74,12 +40,14 @@ public:
 	* fen: string: The FEN to be passed
 	* skipValidation: optional<bool>: Skips the FEN validation. Not recommended.
 	* preserveHeaders: optional<bool>: Preserve headers.
+	*
+	* Raises a runtime error when the FEN is invalid.
 	*/
 	void load(std::string fen, bool skipValidation = false, bool preserveHeaders = false);
 
 	// Constructor.
-	Chess(std::string fen) { load(fen); }
-	Chess() { load(DEFAULT_POSITION); }
+	Chess(std::string fen);
+	Chess();
 
 	// Returns the current FEN.
 	std::string fen();
@@ -196,6 +164,8 @@ public:
 	std::pair<bool, bool> getCastlingRights(color color);
 
 	int moveNumber();
+
+	~Chess();
 };
 	
 #endif

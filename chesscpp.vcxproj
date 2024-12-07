@@ -125,12 +125,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\board.h" />
-    <ClInclude Include="include\chess.h" />
+    <ClInclude Include="include\chesscpp.h" />
     <ClInclude Include="include\types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\board.cpp" />
     <ClCompile Include="src\chess.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
