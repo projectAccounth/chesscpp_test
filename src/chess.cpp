@@ -380,25 +380,25 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	if (it == SYMBOLS.end()) {
 		return false;
 	}
-	if (Ox88.count(sq) > 0) {
+	if (Ox88.count(sq) == 0) {
 		return false;
 	}
-	const square squ = static_cast<square>(Ox88[sq]);
+	const int squ = Ox88.at(sq);
 
-	if (type == KING && !(_kings.at(color) == EMPTY || _kings.at(color) == static_cast<int>(sq))) {
+	if (type == KING && !(_kings.at(color) == EMPTY || _kings.at(color) == static_cast<int>(squ))) {
 		return false;
 	}
 
-	const std::optional<piece> currentPieceOnsquare = _board[static_cast<int>(sq)];
+	const std::optional<piece> currentPieceOnsquare = _board[static_cast<int>(squ)];
 
 	if (currentPieceOnsquare.has_value() && currentPieceOnsquare.value().type == KING) {
 		_kings[currentPieceOnsquare.value().color] = EMPTY;
 	}
 
-	_board[static_cast<int>(sq)] = { color, type };
+	_board[static_cast<int>(squ)] = { color, type };
 
 	if (type == KING) {
-		_kings[color] = static_cast<int>(sq);
+		_kings.at(color) = static_cast<int>(squ);
 	}
 	return true;
 }
@@ -936,7 +936,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 
 std::optional<std::string> Chess::squareColor(square sq) {
 	if (Ox88.count(sq) > 0) {
-		int squ = Ox88[sq];
+		int squ = Ox88.at(sq);
 		return (rank(squ) + file(squ)) % 2 == 0 ? "light" : "dark";
 	}
 	return std::nullopt;
@@ -948,7 +948,7 @@ color Chess::turn() {
 
 std::optional<piece> Chess::remove(square sq) {
 	std::optional<piece> p = get(sq);
-	chImpl->_board[Ox88[sq]] = std::nullopt;
+	chImpl->_board[Ox88.at(sq)] = std::nullopt;
 	if (p && p.value().type == KING) {
 		chImpl->_kings[p.value().color] = EMPTY;
 	}
@@ -1480,7 +1480,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		}
 	}
 	const std::string position = tokens[0];
-	int square = 0;
+	int squ = 0;
 
 	clear(preserveHeaders);
 
@@ -1488,11 +1488,11 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		const std::string p = std::string(1, static_cast<char>(position.at(i)));
 
 		if (p == "/") {
-			square += 8;
+			squ += 8;
 		}
 		else if (isDigit(p)) {
 			try {
-				square += std::stoi(p);
+				squ += std::stoi(p);
 			}
 			catch (const std::exception& e) {
 				std::cout << e.what() << '\n';
@@ -1500,8 +1500,15 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		}
 		else {
 			const color color = p[0] < 'a' ? WHITE : BLACK;
-			chImpl->_put(strPchrs.at(p[0]), color, algebraic(square));
-			square++;
+			square sqp = algebraic(squ);
+			try {
+				chImpl->_put(strPchrs.at(p[0]), color, sqp);
+			}
+			catch (const std::exception& e) {
+				std::cout << e.what() << '\n';
+				throw std::exception();
+			}
+			squ++;
 		}
 	}
 }
