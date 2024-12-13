@@ -126,7 +126,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\chesscpp.h" />
-    <ClInclude Include="include\types.h" />
+    <ClInclude Include="include\exptypes.h" />
+    <ClInclude Include="include\cltypedefs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\chess.cpp" />

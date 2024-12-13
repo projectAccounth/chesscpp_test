@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "types.h"
+#include "exptypes.h"
 
 std::pair<bool, std::string> validateFen(std::string fen);
 

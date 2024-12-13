@@ -1,4 +1,5 @@
 #include "../include/chesscpp.h"
+#include "../include/cltypedefs.h"
 #include <cmath>
 #include <tuple>
 #include <sstream>
@@ -10,12 +11,13 @@
 #include <bitset>
 #include <stdexcept>
 #include <iterator>
+#include <iostream>
 
 class Chess::chrImpl {
 private:
-	Chess &ch;
+	Chess& ch;
 public:
-	chrImpl(Chess &c): ch(c) {}
+	chrImpl(Chess& c) : ch(c) {}
 
 	std::array<std::optional<piece>, 128> _board;
 	color _turn = WHITE;
@@ -223,7 +225,7 @@ std::string replaceSubstring(const std::string& str, const std::string& from, co
 }
 
 std::pair<bool, std::string> validateFen(std::string fen) {
-	const std::vector<std::string> tokens = splitWithRegex(fen, "\\s+");
+	const std::vector<std::string> tokens = splitWithRegex(fen, R"(\s+)");
 	if (tokens.size() != 6) {
 		return { false, "Invalid FEN" };
 	}
@@ -234,7 +236,7 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	}
 
 	const int halfMoves = std::stoi(tokens[4]);
-	if (std::isnan(halfMoves) || halfMoves <= 0) {
+	if (std::isnan(halfMoves) || halfMoves < 0) {
 		return { false, "Invalid FEN" };
 	}
 
@@ -242,7 +244,7 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 		return { false, "Invalid FEN" };
 	}
 
-	if (!std::regex_search(tokens[2], std::regex("[^kKqQ-]"))) {
+	if (std::regex_search(tokens[2], std::regex("[^kKqQ-]"))) {
 		return { false, "Invalid FEN" };
 	}
 
@@ -279,10 +281,10 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 			return { false, "Invalid FEN" };
 		}
 	}
-
-	if (
-		tokens[3][1] == '3' && tokens[1] == "w" ||
-		tokens[3][1] == '6' && tokens[1] == "b"
+	if (tokens[3][0] == '-') {}
+	else if (
+		(tokens[3][1] == '3' && tokens[1] == "w") ||
+		(tokens[3][1] == '6' && tokens[1] == "b")
 		) {
 		return { false, "Invalid FEN" };
 	}
@@ -292,19 +294,31 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	};
 
 	for (const auto& kI : kings) {
-		if (!std::regex_search(std::get<0>(kI), std::get<1>(kI))) {
+		if (!std::regex_search(tokens[0], std::get<1>(kI))) {
 			return { false, "Invalid FEN" };
 		}
-		auto b = std::sregex_iterator(std::get<0>(kI).begin(), std::get<0>(kI).end(), std::get<1>(kI));
-		auto e = std::sregex_iterator();
-		if ((std::regex_search(std::get<0>(kI), std::get<1>(kI)) || std::distance(b, e))) {
-			return { false, "Invalid FEN" };
+		std::smatch matches;
+		if (std::regex_search(tokens[0], matches, std::get<1>(kI))) {
+			if (matches.size() > 1)
+				return { false, "Invalid FEN" };
 		}
 	}
-
-	bool f = std::any_of((rows[0] + rows[7]).begin(), (rows[0] + rows[7]).end(), [](char c) {
+	std::string cnt = rows[0] + rows[7];
+	bool f = false;
+		/*std::any_of(cnt.begin(), cnt.end(), [&](char c) -> bool {
 		return std::toupper(c) == 'P';
-		});
+	});*/
+	try {
+		for (auto& c : cnt) {
+			if (c == 'P') {
+				f = true;
+			}
+		}
+	}
+	catch (const std::exception& e) {
+		std::string msg = e.what();
+		std::cout << msg << '\n';
+	}
 
 	if (f)
 		return { false, "Invalid FEN" };
@@ -362,7 +376,8 @@ void Chess::reset() {
 }
 
 bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
-	if (SYMBOLS.at(std::tolower(ptoc.at(type))) == -1) {
+	auto it = std::find(SYMBOLS.begin(), SYMBOLS.end(), std::tolower(ptoc.at(type)));
+	if (it == SYMBOLS.end()) {
 		return false;
 	}
 	if (Ox88.count(sq) > 0) {
@@ -375,12 +390,12 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	}
 
 	const std::optional<piece> currentPieceOnsquare = _board[static_cast<int>(sq)];
-	 
+
 	if (currentPieceOnsquare.has_value() && currentPieceOnsquare.value().type == KING) {
 		_kings[currentPieceOnsquare.value().color] = EMPTY;
 	}
 
-	_board[static_cast<int>(sq)] = {color, type};
+	_board[static_cast<int>(sq)] = { color, type };
 
 	if (type == KING) {
 		_kings[color] = static_cast<int>(sq);
@@ -417,7 +432,7 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 	const square startsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 	const square currentsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 
-	const std::array<int, 2> attackers = {static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1};
+	const std::array<int, 2> attackers = { static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1 };
 
 	const std::optional<piece> stsq = _board[static_cast<int>(startsquare)];
 	const std::optional<piece> epsq = _board[_epSquare];
@@ -430,9 +445,9 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 
 	auto canCapture = [&](int square) -> bool {
 		return !(square & 0x88) &&
-				_board[square].value().color == _turn &&
-				_board[square].value().type == PAWN;
-	};
+			_board[square].value().color == _turn &&
+			_board[square].value().type == PAWN;
+		};
 	if (std::any_of(attackers.begin(), attackers.end(), canCapture)) {
 		_epSquare = EMPTY;
 	}
@@ -451,7 +466,7 @@ bool Chess::chrImpl::_attacked(color c, square sq) {
 		const int diff = i - static_cast<int>(sq);
 
 		if (diff == 0) continue;
-		
+
 		const int index = diff + 119;
 		if (ATTACKS[index] & PIECE_MASKS.at(p.type)) {
 			if (p.type == PAWN) {
@@ -469,7 +484,7 @@ bool Chess::chrImpl::_attacked(color c, square sq) {
 
 		const int offset = RAYS[index];
 		int j = i + offset;
-		
+
 		bool blocked = false;
 		while (j != static_cast<int>(sq)) {
 			std::optional<piece> pos = _board[j];
@@ -672,7 +687,7 @@ void Chess::chrImpl::_push(internalMove move) {
 		_epSquare,
 		_halfMoves,
 		_moveNumber
-	});
+		});
 }
 
 void Chess::chrImpl::_makeMove(internalMove m) {
@@ -692,7 +707,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 		}
 	}
 	if (m.promotion) {
-		_board[m.to] = { us, m.promotion.value()};
+		_board[m.to] = { us, m.promotion.value() };
 	}
 	if (_board[m.to].value().type == KING) {
 		_kings.at(us) = m.to;
@@ -794,7 +809,7 @@ std::optional<internalMove> Chess::chrImpl::_undoMove() {
 			_board[index] = { them, PAWN };
 		}
 		else {
-			_board[m.to] = {them, m.captured.value()};
+			_board[m.to] = { them, m.captured.value() };
 		}
 	}
 	if (m.flags & (BITS.at("KSIDE_CASTLE") | BITS.at("QSIDE_CASTLE"))) {
@@ -831,7 +846,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 			moveString = moveString + delimiter + "{" + comment + "}";
 		}
 		return moveString;
-	};
+		};
 	std::vector<internalMove> reservedHistory;
 	while (chImpl->_history.size() > 0) {
 		reservedHistory.push_back(chImpl->_undoMove().value());
@@ -877,7 +892,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 			return true;
 		}
 		return false;
-	};
+		};
 	const auto wrapComment = [&](int width, std::string move) -> int {
 		for (const auto& token : split(move, ' ')) {
 			if (token.empty()) {
@@ -899,7 +914,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 			width--;
 		}
 		return width;
-	};
+		};
 	int currentWidth = 0;
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 		if (currentWidth + static_cast<int>(moves[i].size()) > maxWidth && i != 0) {
@@ -951,7 +966,7 @@ std::optional<piece> Chess::remove(square sq) {
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	auto mask = [&](std::string str) -> std::string {
 		return std::regex_replace(str, std::regex("\\"), "\\");
-	};
+		};
 	auto parsePgnHeader = [&](std::string header) -> std::map<std::string, std::string> {
 		std::map<std::string, std::string> headerObj = {};
 		std::vector<std::string> headers = splitWithRegex(header, newlineChar);
@@ -967,7 +982,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 			}
 		}
 		return headerObj;
-	};
+		};
 	pgn = trim(pgn);
 	std::regex headerRegex(
 		"^(\\[((?:" +
@@ -981,7 +996,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	);
 	std::smatch matches;
 	std::string headerString = std::regex_search(pgn, matches, headerRegex) ? (matches.size() >= 2 ? std::string(matches[1]) : "") : "";
-	
+
 	reset();
 
 	std::map<std::string, std::string> headers = parsePgnHeader(headerString);
@@ -1026,7 +1041,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 			}
 
 			return result;
-		};
+			};
 		for (char c : s) {
 			if (static_cast<unsigned char>(c) < 128) {
 				// For characters with code < 128, convert to hexadecimal directly
@@ -1044,7 +1059,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		}
 
 		return hexStream.str();
-	};
+		};
 	auto fromHex = [](std::string s) -> std::string {
 		std::stringstream hexStream;
 
@@ -1053,7 +1068,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		}
 
 		return hexStream.str();
-	};
+		};
 	auto encodeComment = [&](std::string s) -> std::string {
 		std::string modified = s;
 		std::replace(modified.begin(), modified.end(), '\n', ' ');
@@ -1063,13 +1078,13 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		}
 
 		return "{" + toHex(modified) + "}";
-	};
+		};
 	auto decodeComment = [&](std::string s) {
 		if (s.front() == '{' && s.back() == '}') {
 			return fromHex(s.substr(1, s.length() - 2));
 		}
 		return std::string("");
-	};
+		};
 	std::string ms = [&]() -> std::string {
 		std::string processed = replaceSubstring(pgn, headerString, "");
 		std::regex pattern(std::string("({[^}]*})+?|;([" + mask(newlineChar) + "]*)"));
@@ -1088,7 +1103,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		result += std::string(searchStart, processed.cend()); // Append the rest
 
 		return result;
-	}();
+		}();
 	std::regex ravRegex("(\\([^()]+\\))+?");
 }
 
@@ -1290,7 +1305,7 @@ std::string Chess::fen() {
 			i += 8;
 		}
 	}
-		
+
 	std::string castling = "";
 	if (chImpl->_castling[WHITE] & BITS.at("KSIDE_CASTLE")) {
 		castling += 'K';
@@ -1350,7 +1365,7 @@ int Chess::perft(int depth) {
 	int nodes = 0;
 	color c = chImpl->_turn;
 
-	for (int i = 0, len = static_cast<int>(moves.size()) ; i < len; i++) {
+	for (int i = 0, len = static_cast<int>(moves.size()); i < len; i++) {
 		chImpl->_makeMove(moves[i]);
 		if (!chImpl->_isKingAttacked(c)) {
 			if (depth - 1 > 0) {
@@ -1365,8 +1380,8 @@ int Chess::perft(int depth) {
 	return nodes;
 }
 
-Chess::Chess(std::string fen): chImpl(new chrImpl(*this)) { load(fen); }
-Chess::Chess(): chImpl(new chrImpl(*this)) { load(DEFAULT_POSITION); }
+Chess::Chess(std::string fen) : chImpl(new chrImpl(*this)) { load(fen); }
+Chess::Chess() : chImpl(new chrImpl(*this)) { load(DEFAULT_POSITION); }
 Chess::~Chess() { delete chImpl; }
 
 move Chess::chrImpl::_makePretty(internalMove uglyMove) {
@@ -1388,7 +1403,7 @@ move Chess::chrImpl::_makePretty(internalMove uglyMove) {
 	const square fromAlgebraic = algebraic(from);
 	const square toAlgebraic = algebraic(to);
 
-	move m {
+	move m{
 		c, fromAlgebraic, toAlgebraic, p, cpd, promotion, prettyFlags, "", squareToString(fromAlgebraic) + squareToString(toAlgebraic), ch.fen(), ""
 	};
 
@@ -1456,7 +1471,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		}
 		fen = oss.str();
 	}
-	tokens = splitWithRegex(fen, "\\s+");
+	tokens = splitWithRegex(fen, R"(\s+)");
 
 	if (!skipValidation) {
 		std::pair<bool, std::string> result = validateFen(fen);
@@ -1476,7 +1491,12 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 			square += 8;
 		}
 		else if (isDigit(p)) {
-			square += std::stoi(p);
+			try {
+				square += std::stoi(p);
+			}
+			catch (const std::exception& e) {
+				std::cout << e.what() << '\n';
+			}
 		}
 		else {
 			const color color = p[0] < 'a' ? WHITE : BLACK;
@@ -1601,7 +1621,7 @@ bool Chess::isDraw() {
 		isStalemate() ||
 		inSufficientMaterial() ||
 		isThreefoldRepetition()
-	);
+		);
 }
 
 bool Chess::isGameOver() {
@@ -1622,28 +1642,28 @@ std::vector<move> Chess::moves(std::optional<square> sq, std::optional<pieceSymb
 	std::vector<internalMove> generatedMoves = chImpl->_moves(true, piece, sq);
 
 	std::vector<move> result;
-	for (const auto& internal: generatedMoves) {
-		move mv;
+for (const auto& internal: generatedMoves) {
+	move mv;
 
-		mv.color = internal.color;
-		mv.from = static_cast<square>(internal.from);
-		mv.to = static_cast<square>(internal.to);
-		mv.piece = internal.piece;
-		mv.captured = internal.captured;
-		mv.promotion = internal.promotion;
-		mv.flags = internal.flags;
+	mv.color = internal.color;
+	mv.from = static_cast<square>(internal.from);
+	mv.to = static_cast<square>(internal.to);
+	mv.piece = internal.piece;
+	mv.captured = internal.captured;
+	mv.promotion = internal.promotion;
+	mv.flags = internal.flags;
 
-		if (verbose) {
-			mv.san = chImpl->_makePretty(internal).san;
-		}
-		else {
-			mv.san = chImpl->_moveToSan(internal, generatedMoves);
-		}
-
-		result.push_back(mv);
+	if (verbose) {
+		mv.san = chImpl->_makePretty(internal).san;
+	}
+	else {
+		mv.san = chImpl->_moveToSan(internal, generatedMoves);
 	}
 
-	return result;
+	result.push_back(mv);
+}
+
+						 return result;
 }
 
 void Chess::chrImpl::_pruneComments() {
@@ -1654,7 +1674,7 @@ void Chess::chrImpl::_pruneComments() {
 		if (_comments.count(fen) > 0) {
 			currentComments.at(fen) = _comments.at(fen);
 		}
-	};
+		};
 
 	while (_history.size() > 0) {
 		reservedHistory.push_back(_undoMove());

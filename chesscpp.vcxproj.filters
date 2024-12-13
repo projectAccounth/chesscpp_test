@@ -23,7 +23,10 @@
     <ClInclude Include="include\chesscpp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\types.h">
+    <ClInclude Include="include\cltypedefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\exptypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
