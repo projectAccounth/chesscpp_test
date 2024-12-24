@@ -128,9 +128,13 @@
     <ClInclude Include="include\chesscpp.h" />
     <ClInclude Include="include\exptypes.h" />
     <ClInclude Include="include\cltypedefs.h" />
+    <ClInclude Include="src\privImpls.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\chess.cpp" />
+    <ClCompile Include="src\generalFunctions.cpp" />
+    <ClCompile Include="src\pimpl.cpp" />
+    <ClCompile Include="src\moveHandling.cpp" />
+    <ClCompile Include="src\privImpls.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

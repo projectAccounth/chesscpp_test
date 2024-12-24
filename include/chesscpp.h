@@ -45,11 +45,12 @@ public:
 	*/
 	void load(std::string fen, bool skipValidation = false, bool preserveHeaders = false);
 
-	// Constructor.
+	// Constructor, with optional FEN.
 	Chess(std::string fen);
+	// Default constructor, default FEN is loaded.
 	Chess();
 
-	// Returns the current FEN.
+	// Returns the current FEN of the board.
 	std::string fen();
 
 	// Reset the game state.
@@ -97,7 +98,7 @@ public:
 	std::vector<std::string> moves();
 
 	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<move> moves(std::optional<square> sq, std::optional<pieceSymbol> piece, bool verbose);
+	std::vector<move> moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece, bool verbose);
 
 	/*
 	* Moves the specified piece to a specific position on the board.
@@ -137,15 +138,16 @@ public:
 	*/ 
 	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
 	
-	// Returns the current chessboard in ASCII, in White's perspective. Recommended for debugging or console-based chess games.
-	std::string ascii();
+	// Returns the current chessboard in ASCII, in White's perspective by default. Recommended for debugging or console-based chess games.
+	std::string ascii(bool isWhitePersp = true);
 
 	// PERFT - Performance Test.
 	int perft(int depth);
 
-	// Returns the current turn.
+	// Returns the current turn, Black or White.
 	color turn();
 
+	// Returns the current board.
 	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> board();
 
 	// Returns the current square color of the specified square.
@@ -163,6 +165,7 @@ public:
 	// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
 	std::pair<bool, bool> getCastlingRights(color color);
 
+	// Returns the current move number, in full moves.
 	int moveNumber();
 
 	~Chess();

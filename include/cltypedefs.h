@@ -26,6 +26,22 @@ const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN
 // Empty square
 #define EMPTY -1
 
+std::map<pieceSymbol, char>  ptoc = {
+    {PAWN, 'p'}, {ROOK, 'r'}, {BISHOP, 'b'}, {KNIGHT, 'n'}, {QUEEN, 'q'}, {KING, 'k'}
+};
+
+std::map<char, color> charToColor = {
+    {'w', WHITE},
+    {'b', BLACK}
+};
+
+std::map<char, pieceSymbol> strPchrs = {
+    {'p', pieceSymbol::p}, {'r', pieceSymbol::r}, {'b', pieceSymbol::b}, {'n', pieceSymbol::n}, {'q', pieceSymbol::q}, {'k', pieceSymbol::k}
+};
+
+
+std::map<color, char> ctoc = { {WHITE, 'w'}, {BLACK, 'b'} };
+
 typedef struct internalMove {
     color color;
     int from;
