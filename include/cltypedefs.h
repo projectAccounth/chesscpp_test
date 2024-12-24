@@ -1,5 +1,6 @@
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
+#ifndef CLTYPEDEFS_H
+#define CLTYPEDEFS_H
 
 #ifndef __cplusplus
 #error "This library is C++-based. Please use C++ (C++17 or above) for this library."
@@ -26,21 +27,20 @@ const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN
 // Empty square
 #define EMPTY -1
 
-std::map<pieceSymbol, char>  ptoc = {
+const std::map<pieceSymbol, char> ptoc = {
     {PAWN, 'p'}, {ROOK, 'r'}, {BISHOP, 'b'}, {KNIGHT, 'n'}, {QUEEN, 'q'}, {KING, 'k'}
 };
 
-std::map<char, color> charToColor = {
+const std::map<char, color> charToColor = {
     {'w', WHITE},
     {'b', BLACK}
 };
 
-std::map<char, pieceSymbol> strPchrs = {
+const std::map<char, pieceSymbol> strPchrs = {
     {'p', pieceSymbol::p}, {'r', pieceSymbol::r}, {'b', pieceSymbol::b}, {'n', pieceSymbol::n}, {'q', pieceSymbol::q}, {'k', pieceSymbol::k}
 };
 
-
-std::map<color, char> ctoc = { {WHITE, 'w'}, {BLACK, 'b'} };
+const std::map<color, char> ctoc = { {WHITE, 'w'}, {BLACK, 'b'} };
 
 typedef struct internalMove {
     color color;
@@ -94,7 +94,7 @@ const std::map<std::string, int> BITS = {
     {"QSIDE_CASTLE", 64}
 };
 
-std::map<square, int> Ox88 = {
+const std::map<square, int> Ox88 = {
     {square::a8, 0}, {square::b8, 1}, {square::c8, 2}, {square::d8, 3}, {square::e8, 4}, {square::f8, 5}, {square::g8, 6}, {square::h8, 7},
     {square::a7, 16}, {square::b7, 17}, {square::c7, 18}, {square::d7, 19}, {square::e7, 20}, {square::f7, 21}, {square::g7, 22}, {square::h7, 23},
     {square::a6, 32}, {square::b6, 33}, {square::c6, 34}, {square::d6, 35}, {square::e6, 36}, {square::f6, 37}, {square::g6, 38}, {square::h6, 39},

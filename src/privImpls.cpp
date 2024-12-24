@@ -251,16 +251,10 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	/*std::any_of(cnt.begin(), cnt.end(), [&](char c) -> bool {
 	return std::toupper(c) == 'P';
 });*/
-	try {
-		for (auto& c : cnt) {
-			if (c == 'P') {
-				f = true;
-			}
+	for (auto& c : cnt) {
+		if (c == 'P') {
+			f = true;
 		}
-	}
-	catch (const std::exception& e) {
-		std::string msg = e.what();
-		std::cout << msg << '\n';
 	}
 
 	if (f)

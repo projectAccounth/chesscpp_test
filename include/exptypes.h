@@ -1,3 +1,4 @@
+#pragma once
 #ifndef EXPTYPES_H
 #define EXPTYPES_H
 

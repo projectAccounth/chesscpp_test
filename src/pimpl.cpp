@@ -1,4 +1,4 @@
-#include "privImpls.h"
+#include "pimpl.h"
 
 /* Class definitions start here */
 
@@ -27,7 +27,7 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	if (Ox88.count(sq) == 0) {
 		return false;
 	}
-	const int squ = Ox88[sq];
+	const int squ = Ox88.at(sq);
 
 	if (type == KING && !(_kings.at(color) == EMPTY || _kings.at(color) == squ)) {
 		return false;
@@ -220,7 +220,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 		else {
 			if (forPiece && forPiece.value() != type) continue;
 
-			for (int j = 0, len = PIECE_OFFSETS.at(type).size(); j < len; j++) {
+			for (int j = 0, len = static_cast<int>(PIECE_OFFSETS.at(type).size()); j < len; j++) {
 				const int offset = PIECE_OFFSETS.at(type)[j];
 				to = from;
 
@@ -404,18 +404,18 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 			const int castlingTo = m.to - 1;
 			const int castlingFrom = m.to + 1;
 			_board[castlingTo] = _board[castlingFrom];
-			_board[m.from] = std::nullopt;
+			_board[castlingFrom] = std::nullopt;
 		}
 		else if (m.flags & BITS.at("QSIDE_CASTLE")) {
 			const int castlingTo = m.to + 1;
 			const int castlingFrom = m.to - 2;
 			_board[castlingTo] = _board[castlingFrom];
-			_board[m.from] = std::nullopt;
+			_board[castlingFrom] = std::nullopt;
 		}
 
 		_castling.at(us) = 0;
 	}
-	if (_castling.at(us) != 0) {
+	if (_castling.at(us)) {
 		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
 			if (
 				m.from == ROOKS.at(us)[i].square &&
@@ -426,7 +426,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 			}
 		}
 	}
-	if (_castling.at(them) != 0) {
+	if (_castling.at(them)) {
 		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
 			if (
 				m.from == ROOKS.at(them)[i].square &&
@@ -448,6 +448,16 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 	else {
 		_epSquare = EMPTY;
 	}
+	if (m.piece == PAWN) {
+		_halfMoves = 0;
+	}
+	else if (m.flags & (BITS.at("CAPTURE") | BITS.at("EP_CAPTURE"))) {
+		_halfMoves = 0;
+	}
+	else {
+		_halfMoves++;
+	}
+
 	if (us == BLACK) {
 		_moveNumber++;
 	}
@@ -455,17 +465,19 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 }
 
 std::optional<internalMove> Chess::chrImpl::_undoMove() {
-	const History old = _history.back();
+	const std::optional<History> old = _history.back();
 	_history.pop_back();
 
-	const internalMove m = old.move;
+	if (!old) return std::nullopt;
 
-	_kings = old.kings;
-	_turn = old.turn;
-	_castling = old.castling;
-	_epSquare = old.epSquare;
-	_halfMoves = old.halfMoves;
-	_moveNumber = old.moveNumber;
+	const internalMove m = old.value().move;
+
+	_kings = old.value().kings;
+	_turn = old.value().turn;
+	_castling = old.value().castling;
+	_epSquare = old.value().epSquare;
+	_halfMoves = old.value().halfMoves;
+	_moveNumber = old.value().moveNumber;
 
 	const color us = _turn;
 	const color them = swapColor(us);
@@ -567,12 +579,7 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 	}
 
 	pieceType = inferPieceType(cleanMove).value();
-	try {
-		moves = _moves(true, p ? strPchrs.at(std::tolower(p.value().at(0))) : pieceType);
-	}
-	catch (const std::exception& e) {
-		std::cout << e.what() + '\n';
-	}
+	moves = _moves(true, p ? strPchrs.at(std::tolower(p.value().at(0))) : pieceType);
 	if (!to) {
 		return std::nullopt;
 	}

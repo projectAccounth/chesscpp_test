@@ -41,5 +41,8 @@
     <ClInclude Include="src\privImpls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\pimpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

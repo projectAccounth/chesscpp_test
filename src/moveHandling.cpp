@@ -1,4 +1,4 @@
-#include "privImpls.h"
+#include "pimpl.h"
 
 // Contains public functions that are "private" apparently
 
@@ -74,8 +74,10 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 	}
 
 	if (!moveObj) {
-		throw std::runtime_error("Invalid move");
-		exit(1);
+		if (std::holds_alternative<std::string>(moveArg))
+			throw std::runtime_error("Invalid move: " + std::get<std::string>(moveArg));
+		else
+			throw std::runtime_error("Invalid move: from " + std::get<moveOption>(moveArg).from + "to " + std::get<moveOption>(moveArg).to);
 	}
 
 	move prettyMove = chImpl->_makePretty(moveObj.value());

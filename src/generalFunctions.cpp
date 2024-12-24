@@ -1,4 +1,4 @@
-#include "privImpls.h"
+#include "pimpl.h"
 
 // Contains function definitions for general functions (except cmove for moving, it's in the moveHandling file)
 
@@ -18,16 +18,17 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		result.push_back(std::string(1, static_cast<char>(newline)));
 	}
 	const auto appendComment = [&](std::string moveString) -> std::string {
-		const std::string comment = chImpl->_comments.at(fen());
+		if (chImpl->_comments.count(fen()) == 0) return "";
+		const std::string comment = chImpl->_comments[fen()];
 		if (comment != "") {
 			const std::string delimiter = moveString.size() > 0 ? " " : "";
 			moveString = moveString + delimiter + "{" + comment + "}";
 		}
 		return moveString;
 		};
-	std::vector<internalMove> reservedHistory;
+	std::vector<std::optional<internalMove>> reservedHistory;
 	while (chImpl->_history.size() > 0) {
-		reservedHistory.push_back(chImpl->_undoMove().value());
+		reservedHistory.push_back(chImpl->_undoMove());
 	}
 
 	std::vector<std::string> moves;
@@ -38,21 +39,23 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	}
 	while (reservedHistory.size() > 0) {
 		moveString = appendComment(moveString);
-		internalMove m = reservedHistory.back();
+		std::optional<internalMove> m = reservedHistory.back();
 		reservedHistory.pop_back();
 
-		if (chImpl->_history.size() == 0 && m.color == color::b) {
+		if (!m) break;
+
+		if (chImpl->_history.size() == 0 && m.value().color == color::b) {
 			const std::string prefix = std::to_string(chImpl->_moveNumber) + ". ...";
 			moveString = !moveString.empty() ? moveString + " " + prefix : prefix;
 		}
-		else if (m.color == color::w) {
+		else if (m.value().color == color::w) {
 			if (!moveString.empty()) {
 				moves.push_back(moveString);
 			}
-			moveString = chImpl->_moveNumber + ".";
+			moveString = std::to_string(chImpl->_moveNumber) + ".";
 		}
-		moveString = moveString + " " + chImpl->_moveToSan(m, chImpl->_moves(true));
-		chImpl->_makeMove(m);
+		moveString = moveString + " " + chImpl->_moveToSan(m.value(), chImpl->_moves(true));
+		chImpl->_makeMove(m.value());
 	}
 	if (!moveString.empty()) {
 		moves.push_back(appendComment(moveString));
