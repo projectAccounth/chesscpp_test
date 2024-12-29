@@ -59,7 +59,7 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 			stringToSquare(o.to),
 			std::nullopt,
 			std::nullopt,
-			strPchrs.at(o.promotion.value()[0])
+			o.promotion ? std::optional<pieceSymbol>(strPchrs.at(o.promotion.value()[0])) : std::nullopt
 		};
 		for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 			if (
@@ -144,8 +144,8 @@ std::map<std::string, std::string> Chess::header(std::vector<std::string> args .
 	return chImpl->_header;
 }
 
-std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> Chess::board() {
-	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> output = {};
+std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> Chess::board() {
+	std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> output = {};
 	std::vector<std::optional<std::tuple<square, pieceSymbol, color>>> row = {};
 
 	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
@@ -160,7 +160,7 @@ std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> Chess::board() 
 			});
 		}
 		if ((i + 1) & 0x88) {
-			std::vector<std::tuple<square, pieceSymbol, color>> trow;
+			std::vector<std::optional<std::tuple<square, pieceSymbol, color>>> trow;
 			for (const auto& elem : row) {
 				if (elem.has_value()) {
 					trow.push_back(elem.value());
@@ -251,7 +251,7 @@ bool Chess::put(pieceSymbol type, color c, square sq) {
 	return false;
 }
 
-std::vector<move> Chess::moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece, bool verbose) {
+std::vector<move> Chess::moves(bool verbose, std::optional<std::string> sq, std::optional<pieceSymbol> piece) {
 	std::vector<internalMove> generatedMoves = chImpl->_moves(true, piece, sq);
 
 	std::vector<move> result;
@@ -259,8 +259,8 @@ std::vector<move> Chess::moves(std::optional<std::string> sq, std::optional<piec
 		move mv;
 
 		mv.color = internal.color;
-		mv.from = static_cast<square>(internal.from);
-		mv.to = static_cast<square>(internal.to);
+		mv.from = algebraic(internal.from);
+		mv.to = algebraic(internal.to);
 		mv.piece = internal.piece;
 		mv.captured = internal.captured;
 		mv.promotion = internal.promotion;
@@ -276,4 +276,20 @@ std::vector<move> Chess::moves(std::optional<std::string> sq, std::optional<piec
 		result.push_back(mv);
 	}
 	return result;
+}
+
+std::vector<std::string> Chess::moves() {
+	std::vector<internalMove> generatedMoves = chImpl->_moves(true);
+
+	std::vector<std::string> result;
+
+	for (const auto& internal: generatedMoves) {
+		result.push_back(chImpl->_moveToSan(internal, generatedMoves));
+	}
+
+	return result;
+}
+
+std::vector<move> Chess::moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece) {
+	return moves(true, sq, piece);
 }

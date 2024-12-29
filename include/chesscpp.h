@@ -22,6 +22,16 @@
 
 std::pair<bool, std::string> validateFen(std::string fen);
 
+int file(int square);
+
+int rank(int square);
+
+square stringToSquare(const std::string& squareStr);
+
+std::string squareToString(square sq);
+
+square algebraic(int square);
+
 class Chess {
 private:	
 	class chrImpl;
@@ -94,12 +104,13 @@ public:
 	// Returns a value that indicates whether the game is over or not.
 	bool isGameOver();
 
-	// Unimplemented
+	// Returns all available moves.
 	std::vector<std::string> moves();
 
 	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<move> moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece, bool verbose);
+	std::vector<move> moves(bool verbose, std::optional<std::string> sq, std::optional<pieceSymbol> piece);
 
+	std::vector<move> moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece);
 	/*
 	* Moves the specified piece to a specific position on the board.
 	* 
@@ -147,20 +158,20 @@ public:
 	// Returns the current turn, Black or White.
 	color turn();
 
-	// Returns the current board.
-	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> board();
+	// Returns the current board. Useful for analysis.
+	std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> board();
 
-	// Returns the current square color of the specified square.
+	// Returns the current square color of the specified square. Either "light" or "dark" is returned.
 	std::optional<std::string> squareColor(square sq);
 
-	// Unimplemented
-	std::vector<std::string> history();
+	// Returns the history of the board, in the form of a string array.
+	std::vector<std::string> historys();
 	
-	// Unimplemented
-	std::vector<move> historym(bool verbose = false);
+	// Returns the history of the board. If verbose = true, returns an array of moves. Otherwise, an array of string is returned (array of moves).
+	std::vector<std::variant<std::string, move>> history(bool verbose);
 	
-	// Unimplemented
-	std::vector<std::string> historys(bool verbose = true);
+	// Returns the history of the board, in the form of a move array.
+	std::vector<move> historym();
 
 	// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
 	std::pair<bool, bool> getCastlingRights(color color);

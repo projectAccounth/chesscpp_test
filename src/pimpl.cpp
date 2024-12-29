@@ -10,8 +10,8 @@ void Chess::chrImpl::_updateSetup(std::string fen) {
 	if (_history.size() > 0) return;
 
 	if (fen != DEFAULT_POSITION) {
-		_header.at("SetUp") = '1';
-		_header.at("FEN") = fen;
+		if (_header.count("SetUp") == 0) _header.insert({ "SetUp", "1" }); else _header.at("SetUp") = "1";
+		if (_header.count("FEN") == 0) _header.insert({ "FEN", fen }); else _header.at("FEN") = fen;
 	}
 	else {
 		_header.erase("SetUp");
@@ -347,7 +347,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 		output += squareToString(algebraic(m.to));
 
 		if (m.promotion) {
-			output += '=' + std::toupper(ptoc.at(m.promotion.value()));
+			output += std::string(1, '=') + std::string(1, std::toupper(ptoc.at(m.promotion.value())));
 		}
 	}
 
@@ -520,7 +520,7 @@ std::optional<internalMove> Chess::chrImpl::_undoMove() {
 std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool strict) {
 	const std::string cleanMove = strippedSan(move);
 
-	pieceSymbol pieceType = inferPieceType(cleanMove).value();
+	std::optional<pieceSymbol> pieceType = inferPieceType(cleanMove);
 	std::vector<internalMove> moves = _moves(true, pieceType);
 
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
@@ -578,14 +578,16 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 		}
 	}
 
-	pieceType = inferPieceType(cleanMove).value();
-	moves = _moves(true, p ? strPchrs.at(std::tolower(p.value().at(0))) : pieceType);
+	pieceType = inferPieceType(cleanMove);
+	moves = _moves(true, (p && p.value() != "") ? strPchrs.at(std::tolower(p.value().at(0))) : pieceType);
 	if (!to) {
 		return std::nullopt;
 	}
+	to = stringToSquare(toSq);
 	for (int i = 0, len = static_cast<int>(moves.size()); i < len; i++) {
 		if (!from) {
-			std::string currentMove = replaceSubstring(strippedSan(_moveToSan(moves[i], moves)), "x", "");
+			std::string moveStr = strippedSan(_moveToSan(moves[i], moves));
+			std::string currentMove = replaceSubstring(moveStr, "x", "");
 			if (cleanMove == currentMove) {
 				return moves[i];
 			}
