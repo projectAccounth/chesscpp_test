@@ -1,5 +1,6 @@
 #pragma once
 #include "../include/cltypedefs.h"
+#include "../include/chesscpp.h"
 #include <cmath>
 #include <tuple>
 #include <sstream>
@@ -24,16 +25,6 @@ std::vector<std::string> splitWithRegex(const std::string& str, const std::strin
 std::string join(const std::vector<std::string>& elements, const std::string& delimiter);
 
 bool isDigit(std::string c);
-
-int file(int square);
-
-int rank(int square);
-
-square stringToSquare(const std::string& squareStr);
-
-std::string squareToString(square sq);
-
-square algebraic(int square);
 
 color swapColor(color color);
 

@@ -1,5 +1,4 @@
 #pragma once
-#include "../include/chesscpp.h"
 #include "privImpls.h"
 
 class Chess::chrImpl {
