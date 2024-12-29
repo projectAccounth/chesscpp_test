@@ -18,11 +18,11 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		result.push_back(std::string(1, static_cast<char>(newline)));
 	}
 	const auto appendComment = [&](std::string moveString) -> std::string {
-		if (chImpl->_comments.count(fen()) == 0) return "";
+		if (chImpl->_comments.count(fen()) == 0) return moveString;
 		const std::string comment = chImpl->_comments[fen()];
 		if (comment != "") {
 			const std::string delimiter = moveString.size() > 0 ? " " : "";
-			moveString = moveString + delimiter + "{" + comment + "}";
+			moveString += delimiter + "{" + comment + "}";
 		}
 		return moveString;
 		};
@@ -60,11 +60,12 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	if (!moveString.empty()) {
 		moves.push_back(appendComment(moveString));
 	}
-	if (!chImpl->_header.at("Result").empty()) {
+	if (chImpl->_header.count("Result") > 0) {
 		moves.push_back(chImpl->_header.at("Result"));
 	}
 	if (maxWidth == 0) {
-		return join(result, "") + join(moves, " ");
+		auto resultStr = join(result, "").append(join(moves, " "));
+		return resultStr;
 	}
 
 	const auto strip = [&]() -> bool {
@@ -98,6 +99,12 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		};
 	int currentWidth = 0;
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
+		if (currentWidth + static_cast<int>(moves[i].size()) > maxWidth) {
+			if (moves[i].find('{') != std::string::npos) {
+				currentWidth = wrapComment(currentWidth, moves[i]);
+				continue;
+			}
+		}
 		if (currentWidth + static_cast<int>(moves[i].size()) > maxWidth && i != 0) {
 			if (result.back() == " ") {
 				result.pop_back();
@@ -117,7 +124,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	auto mask = [&](std::string str) -> std::string {
-		return std::regex_replace(str, std::regex("\\"), "\\");
+		return std::regex_replace(str, std::regex(R"(\)"), R"(\)");
 		};
 	auto parsePgnHeader = [&](std::string header) -> std::map<std::string, std::string> {
 		std::map<std::string, std::string> headerObj = {};
@@ -126,7 +133,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		std::string value = "";
 
 		for (int i = 0; i < static_cast<int>(headers.size()); i++) {
-			const std::regex reg = std::regex("^\\s*\\[\\s*([A-Za-z]+)\\s*\"(.*)\"\\s*\\]\\s*$");
+			const std::regex reg = std::regex(R"(^\s*\[\s*([A-Za-z]+)\s*\"(.*)\"\s*\]\s*$)");
 			key = std::regex_replace(headers[i], reg, "$1");
 			value = std::regex_replace(headers[i], reg, "$2");
 			if (trim(key).size() > 0) {
@@ -137,14 +144,16 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		};
 	pgn = trim(pgn);
 	std::regex headerRegex(
-		"^(\\[((?:" +
+		std::string(
+		R"(^(\[((?:)" +
 		mask(newlineChar) +
-		")|.)*\\])" +
-		"((?:\\s*" +
+		R"()|.)*\]))" +
+		R"(((?:\s*)" +
 		mask(newlineChar) +
-		"){2}|(?:\\s*" +
+		R"(){2}|(?:\s*)" +
 		mask(newlineChar) +
 		")*$)"
+		)
 	);
 	std::smatch matches;
 	std::string headerString = std::regex_search(pgn, matches, headerRegex) ? (matches.size() >= 2 ? std::string(matches[1]) : "") : "";
@@ -152,7 +161,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	reset();
 
 	std::map<std::string, std::string> headers = parsePgnHeader(headerString);
-	std::string fen = "";
+	std::string pfen = "";
 
 	for (const auto& val : headers) {
 		std::string lowerStr;
@@ -160,14 +169,14 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 			lowerStr += std::tolower(c);
 		}
 		if (lowerStr == "fen") {
-			fen = headers.at(val.first);
+			pfen = headers.at(val.first);
 		}
 		header({ val.first, headers.at(val.first) });
 	}
 
 	if (!strict) {
-		if (!fen.empty()) {
-			load(fen, false, true);
+		if (!pfen.empty()) {
+			load(pfen, false, true);
 		}
 	}
 	else {
@@ -254,7 +263,46 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 
 		return result;
 		}();
-	std::regex ravRegex("(\\([^()]+\\))+?");
+	std::regex ravRegex(R"((\([^()]+\))+?)");
+
+	while (std::regex_search(ms, ravRegex)) {
+		ms = std::regex_replace(ms, ravRegex, "");
+	}
+
+	ms = std::regex_replace(ms, std::regex(R"(\d+\.(\.\.)?)"), "");
+
+	ms = std::regex_replace(ms, std::regex(R"(\.\.\.)"), "");
+
+	ms = std::regex_replace(ms, std::regex(R"($\d+)"), "");
+
+	auto moves = splitWithRegex(trim(ms), R"(\s+)");
+
+	std::string result = "";
+
+	for (int halfMove = 0; halfMove < static_cast<int>(moves.size()); halfMove++) {
+		const auto comment = decodeComment(moves[halfMove]);
+		if (!comment.empty()) { chImpl->_comments.at(fen()) = comment; continue; }
+
+		const auto m = chImpl->_moveFromSan(moves[halfMove], strict);
+
+		if (!m) {
+			if (std::find(TERMINATION_MARKERS.begin(), TERMINATION_MARKERS.end(), moves[halfMove]) != TERMINATION_MARKERS.end()) {
+				result = moves[halfMove];
+			}
+			else {
+				throw std::runtime_error("Error move in PGN: " + moves[halfMove]);
+			}
+		}
+		else {
+			result = "";
+			chImpl->_makeMove(m.value());
+			chImpl->_incPositionCount(fen());
+		}
+	}
+
+	if (!result.empty() && !chImpl->_header.empty() && chImpl->_header.count("Header") == 0) {
+		header({ "Result", result });
+	}
 }
 
 std::string Chess::ascii(bool isWhitePersp) {
@@ -491,4 +539,52 @@ bool Chess::isDraw() {
 
 bool Chess::isGameOver() {
 	return isCheckmate() || isStalemate() || isDraw();
+}
+
+std::vector<std::string> Chess::historys() {
+	auto hs = history(false);
+	std::vector<std::string> result;
+
+	for (auto& m : hs) {
+		result.push_back(std::get<std::string>(m));
+	}
+	return result;
+}
+
+std::vector<move> Chess::historym() {
+	auto hs = history(true);
+	std::vector<move> result;
+
+	for (auto& m : hs) {
+		result.push_back(std::get<move>(m));
+	}
+	return result;
+}
+
+std::vector<std::variant<std::string, move>> Chess::history(bool verbose) {
+	std::vector<std::optional<internalMove>> reservedHistory;
+	std::vector<std::variant<std::string, move>> moveHistory;
+
+	while (chImpl->_history.size() > 0) {
+		reservedHistory.push_back(chImpl->_undoMove());
+	}
+
+	while (true) {
+		if (reservedHistory.empty()) return moveHistory;
+
+		auto m = reservedHistory.back();
+		reservedHistory.pop_back();
+
+		if (!m) break;
+
+		if (verbose) {
+			moveHistory.push_back(chImpl->_makePretty(m.value()));
+		}
+		else {
+			moveHistory.push_back(chImpl->_moveToSan(m.value(), chImpl->_moves()));
+		}
+		chImpl->_makeMove(m.value());
+	}
+
+	return moveHistory;
 }
