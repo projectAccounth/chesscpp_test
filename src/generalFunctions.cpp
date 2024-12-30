@@ -124,7 +124,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	auto mask = [&](std::string str) -> std::string {
-		return std::regex_replace(str, std::regex(R"(\)"), R"(\)");
+		return std::regex_replace(str, std::regex(R"(\\)"), R"(\)");
 		};
 	auto parsePgnHeader = [&](std::string header) -> std::map<std::string, std::string> {
 		std::map<std::string, std::string> headerObj = {};
@@ -143,8 +143,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		return headerObj;
 		};
 	pgn = trim(pgn);
-	std::regex headerRegex(
-		std::string(
+	std::string hdrRg(
 		R"(^(\[((?:)" +
 		mask(newlineChar) +
 		R"()|.)*\]))" +
@@ -153,8 +152,8 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		R"(){2}|(?:\s*)" +
 		mask(newlineChar) +
 		")*$)"
-		)
 	);
+	std::regex headerRegex(hdrRg);
 	std::smatch matches;
 	std::string headerString = std::regex_search(pgn, matches, headerRegex) ? (matches.size() >= 2 ? std::string(matches[1]) : "") : "";
 
@@ -248,7 +247,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		};
 	std::string ms = [&]() -> std::string {
 		std::string processed = replaceSubstring(pgn, headerString, "");
-		std::regex pattern(std::string("({[^}]*})+?|;([" + mask(newlineChar) + "]*)"));
+		std::regex pattern(std::string(R"(({[^}]*})+?|;([^\r?\n]*))")); // FIX THIS
 
 		std::string result;
 		std::smatch match;
