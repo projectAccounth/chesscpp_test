@@ -147,7 +147,7 @@ public:
 	* 
 	* newline: string : the newline character. Should be kept default.
 	*/ 
-	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\r?\n");
+	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\\r?\\n");
 	
 	// Returns the current chessboard in ASCII, in White's perspective by default. Recommended for debugging or console-based chess games.
 	std::string ascii(bool isWhitePersp = true);
@@ -178,6 +178,16 @@ public:
 
 	// Returns the current move number, in full moves.
 	int moveNumber();
+
+	std::string getComment() const;
+
+	std::string setComment(const std::string& comment);
+
+	std::vector<std::pair<std::string, std::string>> getComments();
+
+	std::vector<std::pair<std::string, std::string>> deleteComments();
+
+	bool setCastlingRights(const color& c, std::optional<std::pair<pieceSymbol, bool>> rights);
 
 	~Chess();
 };
