@@ -1,5 +1,6 @@
 #include "pimpl.h"
 
+
 /* Class definitions start here */
 
 Chess::Chess(std::string fen) : chImpl(new chrImpl(*this)) { load(fen); }
@@ -24,10 +25,10 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	if (iter == SYMBOLS.end()) {
 		return false;
 	}
-	if (Ox88.count(sq) == 0) {
+	if (!isValid8x8(sq)) {
 		return false;
 	}
-	const int squ = Ox88.at(sq);
+	const int squ = squareTo0x88(sq);
 
 	if (type == KING && !(_kings.at(color) == EMPTY || _kings.at(color) == squ)) {
 		return false;
@@ -50,22 +51,22 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 void Chess::chrImpl::_updateCastlingRights() {
 	const bool whiteKingInPlace =
 		!_board.empty() &&
-		_board[Ox88.at(square::e1)].value().type == KING &&
-		_board[Ox88.at(square::e1)].value().color == WHITE;
+		_board[squareTo0x88(square::e1)].value().type == KING &&
+		_board[squareTo0x88(square::e1)].value().color == WHITE;
 	const bool blackKingInPlace =
 		!_board.empty() &&
-		_board[Ox88.at(square::e8)].value().type == KING &&
-		_board[Ox88.at(square::e8)].value().color == BLACK;
-	if (!whiteKingInPlace || _board[Ox88.at(square::a1)].value().type != ROOK || _board[Ox88.at(square::a1)].value().color != WHITE) {
+		_board[squareTo0x88(square::e8)].value().type == KING &&
+		_board[squareTo0x88(square::e8)].value().color == BLACK;
+	if (!whiteKingInPlace || _board[squareTo0x88(square::a1)].value().type != ROOK || _board[squareTo0x88(square::a1)].value().color != WHITE) {
 		_castling.at(color::w) &= ~BITS.at("QSIDE_CASTLE");
 	}
-	if (!whiteKingInPlace || _board[Ox88.at(square::h1)].value().type != ROOK || _board[Ox88.at(square::h1)].value().color != WHITE) {
+	if (!whiteKingInPlace || _board[squareTo0x88(square::h1)].value().type != ROOK || _board[squareTo0x88(square::h1)].value().color != WHITE) {
 		_castling.at(color::w) &= ~BITS.at("KSIDE_CASTLE");
 	}
-	if (!blackKingInPlace || _board[Ox88.at(square::a8)].value().type != ROOK || _board[Ox88.at(square::a8)].value().color != BLACK) {
+	if (!blackKingInPlace || _board[squareTo0x88(square::a8)].value().type != ROOK || _board[squareTo0x88(square::a8)].value().color != BLACK) {
 		_castling.at(color::b) &= ~BITS.at("QSIDE_CASTLE");
 	}
-	if (!blackKingInPlace || _board[Ox88.at(square::h8)].value().type != ROOK || _board[Ox88.at(square::h8)].value().color != BLACK) {
+	if (!blackKingInPlace || _board[squareTo0x88(square::h8)].value().type != ROOK || _board[squareTo0x88(square::h8)].value().color != BLACK) {
 		_castling.at(color::b) &= ~BITS.at("KSIDE_CASTLE");
 	}
 }
@@ -98,7 +99,7 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 }
 
 bool Chess::chrImpl::_attacked(color c, int sq) {
-	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
 		if (i & 0x88) {
 			i += 7;
 			continue;
@@ -156,16 +157,16 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 	std::optional<square> forSquare = sq ? std::optional<square>(stringToSquare(sq.value())) : std::nullopt;
 	std::optional<pieceSymbol> forPiece = p;
 
-	int firstSquare = Ox88.at(square::a8);
-	int lastSquare = Ox88.at(square::h1);
+	int firstSquare = squareTo0x88(square::a8);
+	int lastSquare = squareTo0x88(square::h1);
 	bool singleSquare = false;
 
 	if (forSquare) {
-		if (Ox88.count(forSquare.value()) == 0) {
+		if (!isValid8x8(forSquare.value())) {
 			return {};
 		}
 		else {
-			firstSquare = Ox88.at(forSquare.value());
+			firstSquare = squareTo0x88(forSquare.value());
 			lastSquare = firstSquare;
 			singleSquare = true;
 		}
@@ -177,7 +178,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 			continue;
 		}
 
-		if (!_board.at(from) || _board.at(from).value().color == them)
+		if (!_board[from] || _board[from].value().color == them)
 			continue;
 
 		pieceSymbol type = _board.at(from).value().type;
@@ -188,11 +189,11 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 			if (forPiece && forPiece != type) continue;
 
 			to = from + PAWN_OFFSETS.at(us)[0];
-			if (!_board.at(to)) {
+			if (!_board[to]) {
 				addMove(moves, us, from, to, PAWN);
 
 				to = from + PAWN_OFFSETS.at(us)[1];
-				if (SECOND_RANK.at(us) == rank(from) && !_board.at(to)) {
+				if (SECOND_RANK.at(us) == rank(from) && !_board[to]) {
 					addMove(moves, us, from, to, PAWN, std::nullopt, BITS.at("BIG_PAWN"));
 				}
 			}
@@ -201,7 +202,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 				to = from + PAWN_OFFSETS.at(us)[j];
 				if (to & 0x88) continue;
 
-				if (_board.at(to).has_value() && _board.at(to).value().color == them) {
+				if (_board[to].has_value() && _board.at(to).value().color == them) {
 					addMove(
 						moves,
 						us,
@@ -416,7 +417,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 		_castling.at(us) = 0;
 	}
 	if (_castling.at(us)) {
-		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
+		for (int i = 0; i < static_cast<int>(ROOKS.at(us).size()); i++) {
 			if (
 				m.from == ROOKS.at(us)[i].square &&
 				_castling.at(us) & ROOKS.at(us)[i].flag
@@ -427,7 +428,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 		}
 	}
 	if (_castling.at(them)) {
-		for (int i = 0, len = static_cast<int>(ROOKS.at(us).size()); i < len; i++) {
+		for (int i = 0; i < static_cast<int>(ROOKS.at(us).size()); i++) {
 			if (
 				m.from == ROOKS.at(them)[i].square &&
 				_castling.at(them) & ROOKS.at(them)[i].flag
@@ -593,18 +594,18 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 			}
 		}
 		else if ((!p || strPchrs.at(std::tolower(p.value()[0])) == moves[i].piece) &&
-			Ox88.at(from.value()) == moves[i].from && 
-			Ox88.at(to.value()) == moves[i].to &&
+			squareTo0x88(from.value()) == moves[i].from && 
+			squareTo0x88(to.value()) == moves[i].to &&
 			(!promotion.has_value() || strPchrs.at(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
 			return moves[i];
 		}
 		else if (overlyDisambiguated) {
 			square sq = algebraic(moves[i].from);
 			if ((!p || strPchrs.at(std::tolower(p.value()[0])) == moves[i].piece) &&
-				Ox88.at(to.value()) == moves[i].to &&
+				squareTo0x88(to.value()) == moves[i].to &&
 				(from.value() == sq) &&
-				Ox88.at(from.value()) == moves[i].from &&
-				Ox88.at(to.value()) == moves[i].to &&
+				squareTo0x88(from.value()) == moves[i].from &&
+				squareTo0x88(to.value()) == moves[i].to &&
 				(!promotion || strPchrs.at(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
 				return moves[i];
 			}

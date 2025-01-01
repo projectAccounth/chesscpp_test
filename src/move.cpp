@@ -8,7 +8,7 @@ color Chess::turn() {
 
 std::optional<piece> Chess::remove(square sq) {
 	std::optional<piece> p = get(sq);
-	chImpl->_board[Ox88.at(sq)] = std::nullopt;
+	chImpl->_board[squareTo0x88(sq)] = std::nullopt;
 	if (p && p.value().type == KING) {
 		chImpl->_kings[p.value().color] = EMPTY;
 	}
@@ -34,8 +34,8 @@ std::optional<move> Chess::undo() {
 }
 
 std::optional<std::string> Chess::squareColor(square sq) {
-	if (Ox88.count(sq) > 0) {
-		int squ = Ox88.at(sq);
+	if (isValid8x8(sq)) {
+		int squ = squareTo0x88(sq);
 		return (rank(squ) + file(squ)) % 2 == 0 ? "light" : "dark";
 	}
 	return std::nullopt;
@@ -95,8 +95,8 @@ int Chess::perft(int depth) {
 	if (depth == 1) return moves.size();
 	if (depth == 0) return 1;
 
-	for (int i = 0, len = static_cast<int>(moves.size()); i < len; i++) {
-		chImpl->_makeMove(moves[i]);
+	for (const auto& m : moves) {
+		chImpl->_makeMove(m);
 		nodes += perft(depth - 1);
 		chImpl->_undoMove();
 	}
@@ -144,7 +144,7 @@ std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> 
 	std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> output = {};
 	std::vector<std::optional<std::tuple<square, pieceSymbol, color>>> row = {};
 
-	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
 		if (!chImpl->_board[i]) {
 			row.push_back(std::nullopt);
 		}
@@ -171,7 +171,7 @@ std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> 
 }
 
 bool Chess::isAttacked(square sq, color attackedBy) {
-	return chImpl->_attacked(attackedBy, Ox88.at(sq));
+	return chImpl->_attacked(attackedBy, squareTo0x88(sq));
 }
 
 bool Chess::isCheck() {
@@ -197,7 +197,7 @@ bool Chess::inSufficientMaterial() {
 	std::vector<int> bishops = {};
 	int numPieces = 0;
 	int squareColor = 0;
-	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
 		squareColor = (squareColor + 1) % 2;
 		if (i & 0x88) {
 

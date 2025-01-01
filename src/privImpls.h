@@ -39,3 +39,9 @@ std::optional<pieceSymbol> inferPieceType(std::string san);
 std::string strippedSan(std::string move);
 
 std::string trimFen(std::string fen);
+
+int squareTo0x88(const square& sq);
+
+bool isValid8x8(const square& sq);
+
+bool isValid0x88(const int& sq);

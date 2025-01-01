@@ -20,16 +20,22 @@
 
 #include "exptypes.h"
 
+// Used to validate strings for FEN notation. Returns a boolean that indicates whether the FEN is valid or not, and a string for the error message.
 std::pair<bool, std::string> validateFen(std::string fen);
 
+// File of a 0x88 square.
 int file(int square);
 
+// Rank of a 0x88 square.
 int rank(int square);
 
+// Convert a string (algebraic notation) to a value of type square.
 square stringToSquare(const std::string& squareStr);
 
+// Convert a square (the type) to a string.
 std::string squareToString(square sq);
 
+// Convert a 0x88 square to algebraic notation.
 square algebraic(int square);
 
 class Chess {

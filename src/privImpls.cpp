@@ -15,6 +15,14 @@ bool operator<(square lhs, square rhs) {
 	return static_cast<int>(lhs) < static_cast<int>(rhs);
 }
 
+bool isValid8x8(const square& sq) {
+	return (int)(sq) >= 0 && (int)(sq) < 64;
+}
+
+bool isValid0x88(const int& sq) {
+	return (sq & 0x88) == 0;
+}
+
 std::vector<std::string> split(const std::string& str, char delimiter) {
 	std::vector<std::string> tokens;
 	std::stringstream ss(str);
@@ -40,12 +48,14 @@ std::string join(const std::vector<std::string>& elements, const std::string& de
 
 	for (size_t i = 0; i < elements.size(); ++i) {
 		result += elements[i];
-		if (i < elements.size() - 1) {
-			result += delimiter;
-		}
+		if (i < elements.size() - 1) result += delimiter;
 	}
 
 	return result;
+}
+
+int squareTo0x88(const square& sq) {
+	return ((int)(sq) >> 3 << 4) | (int)(sq) & 7;
 }
 
 bool isDigit(std::string c) {
@@ -62,30 +72,15 @@ int file(int square) {
 }
 
 square stringToSquare(const std::string& squareStr) {
-	int f = squareStr[0] - 'a';
-	int r = '8' - squareStr[1];
-	return static_cast<square>(r * 8 + f);
+	return static_cast<square>(('8' - squareStr[1]) * 8 + (squareStr[0] - 'a'));
 }
 
 std::string squareToString(square sq) {
-	static std::vector<std::string> square_names = {
-		"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-		"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-		"a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-		"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-		"a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-		"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-		"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-		"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
-	};
-
-	return square_names[static_cast<unsigned int>(sq)];
+	return SQUARES[static_cast<unsigned int>(sq)];
 }
 
 square algebraic(int square) {
-	int f = file(square);
-	int r = rank(square);
-	return stringToSquare(std::string(1, static_cast<char>(std::string("abcdefgh").at(f))) + std::string(1, static_cast<char>(std::string("87654321").at(r))));
+	return stringToSquare(std::string(1, static_cast<char>(std::string("abcdefgh").at(file(square)))) + std::string(1, static_cast<char>(std::string("87654321").at(rank(square)))));
 }
 
 color swapColor(color color) {
@@ -110,10 +105,10 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 
 		ambiguities++;
 
-		if (rank(Ox88.at(from)) == rank(Ox88.at(ambigFrom))) {
+		if (rank(squareTo0x88(from)) == rank(squareTo0x88(ambigFrom))) {
 			sameRank++;
 		}
-		if (file(Ox88.at(from)) == file(Ox88.at(ambigFrom))) {
+		if (file(squareTo0x88(from)) == file(squareTo0x88(ambigFrom))) {
 			sameFile++;
 		}
 	}

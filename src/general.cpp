@@ -307,8 +307,8 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 std::string Chess::ascii(bool isWhitePersp) {
 	std::string s = "   +------------------------+\n";
 
-	int start = isWhitePersp ? Ox88.at(square::a8) : Ox88.at(square::a1);
-	int end = isWhitePersp ? Ox88.at(square::h1) : Ox88.at(square::h8);
+	int start = isWhitePersp ? squareTo0x88(square::a8) : squareTo0x88(square::a1);
+	int end = isWhitePersp ? squareTo0x88(square::h1) : squareTo0x88(square::h8);
 	int step = isWhitePersp ? 1 : -1;
 
 	for (int i = start; (isWhitePersp ? i <= end : i >= end); i += step) {
@@ -350,7 +350,7 @@ std::string Chess::fen() {
 	int empty = 0;
 	std::string fen = "";
 
-	for (int i = Ox88.at(square::a8); i <= Ox88.at(square::h1); i++) {
+	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
 		if (chImpl->_board[i]) {
 			if (empty > 0) {
 				fen += std::to_string(empty);
@@ -369,7 +369,7 @@ std::string Chess::fen() {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 			}
-			if (i != Ox88.at(square::h1)) {
+			if (i != squareTo0x88(square::h1)) {
 				fen += '/';
 			}
 
@@ -503,7 +503,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	if (queenSideCastleBlack != tokens[2].end())
 		chImpl->_castling.at(BLACK) |= BITS.at("QSIDE_CASTLE");
 
-	chImpl->_epSquare = tokens[3] == "-" ? EMPTY : Ox88.at(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? EMPTY : squareTo0x88(stringToSquare(tokens[3]));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 

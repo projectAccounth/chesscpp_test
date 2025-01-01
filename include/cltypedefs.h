@@ -15,6 +15,7 @@
 #include <optional>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <array>
 #include <vector>
 #include <variant>
@@ -73,18 +74,7 @@ const std::map<std::string, char> FLAGS = {
     {"QSIDE_CASTLE", 'q'}
 };
 
-const std::array<std::string, 64> SQUARES = {
-    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
-};
-
-const std::map<std::string, int> BITS = {
+const std::unordered_map<std::string, int> BITS = {
     {"NORMAL", 1},
     {"CAPTURE", 2},
     {"BIG_PAWN", 4},
@@ -92,17 +82,6 @@ const std::map<std::string, int> BITS = {
     {"PROMOTION", 16},
     {"KSIDE_CASTLE", 32},
     {"QSIDE_CASTLE", 64}
-};
-
-const std::map<square, int> Ox88 = {
-    {square::a8, 0}, {square::b8, 1}, {square::c8, 2}, {square::d8, 3}, {square::e8, 4}, {square::f8, 5}, {square::g8, 6}, {square::h8, 7},
-    {square::a7, 16}, {square::b7, 17}, {square::c7, 18}, {square::d7, 19}, {square::e7, 20}, {square::f7, 21}, {square::g7, 22}, {square::h7, 23},
-    {square::a6, 32}, {square::b6, 33}, {square::c6, 34}, {square::d6, 35}, {square::e6, 36}, {square::f6, 37}, {square::g6, 38}, {square::h6, 39},
-    {square::a5, 48}, {square::b5, 49}, {square::c5, 50}, {square::d5, 51}, {square::e5, 52}, {square::f5, 53}, {square::g5, 54}, {square::h5, 55},
-    {square::a4, 64}, {square::b4, 65}, {square::c4, 66}, {square::d4, 67}, {square::e4, 68}, {square::f4, 69}, {square::g4, 70}, {square::h4, 71},
-    {square::a3, 80}, {square::b3, 81}, {square::c3, 82}, {square::d3, 83}, {square::e3, 84}, {square::f3, 85}, {square::g3, 86}, {square::h3, 87},
-    {square::a2, 96}, {square::b2, 97}, {square::c2, 98}, {square::d2, 99}, {square::e2, 100}, {square::f2, 101}, {square::g2, 102}, {square::h2, 103},
-    {square::a1, 112}, {square::b1, 113}, {square::c1, 114}, {square::d1, 115}, {square::e1, 116}, {square::f1, 117}, {square::g1, 118}, {square::h1, 119}
 };
 
 const std::map<color, std::vector<int>> PAWN_OFFSETS = {
