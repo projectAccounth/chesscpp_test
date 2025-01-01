@@ -136,9 +136,9 @@
     <ClInclude Include="src\privImpls.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\generalFunctions.cpp" />
+    <ClCompile Include="src\general.cpp" />
+    <ClCompile Include="src\move.cpp" />
     <ClCompile Include="src\pimpl.cpp" />
-    <ClCompile Include="src\moveHandling.cpp" />
     <ClCompile Include="src\privImpls.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

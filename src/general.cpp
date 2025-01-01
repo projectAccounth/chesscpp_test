@@ -247,7 +247,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		};
 	std::string ms = [&]() -> std::string {
 		std::string processed = replaceSubstring(pgn, headerString, "");
-		std::regex pattern(std::string(R"(({[^}]*})+?|;([^\r?\n]*))")); // FIX THIS
+		std::regex pattern(std::string(R"(({[^}]*})+?|;([^\r?\n]*))"), std::regex_constants::basic); // FIX THIS
 
 		std::string result;
 		std::smatch match;
@@ -587,3 +587,17 @@ std::vector<std::variant<std::string, move>> Chess::history(bool verbose) {
 
 	return moveHistory;
 }
+
+std::string Chess::getComment() {
+	return chImpl->_comments.at(fen());
+}
+
+std::string Chess::deleteComment() {
+	const std::string comment = chImpl->_comments.at(fen());
+	chImpl->_comments.erase(fen());
+	return comment;
+}
+
+//std::vector<std::pair<std::string, std::string>> Chess::getComments() {
+//	chImpl->_pruneComments();
+//}

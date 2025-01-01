@@ -88,20 +88,16 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 }
 
 int Chess::perft(int depth) {
-	const std::vector<internalMove> moves = chImpl->_moves(false);
+	const std::vector<internalMove> moves = chImpl->_moves(true); // get all legal moves
 	int nodes = 0;
 	color c = chImpl->_turn;
 
+	if (depth == 1) return moves.size();
+	if (depth == 0) return 1;
+
 	for (int i = 0, len = static_cast<int>(moves.size()); i < len; i++) {
 		chImpl->_makeMove(moves[i]);
-		if (!chImpl->_isKingAttacked(c)) {
-			if (depth - 1 > 0) {
-				nodes += perft(depth - 1);
-			}
-			else {
-				nodes++;
-			}
-		}
+		nodes += perft(depth - 1);
 		chImpl->_undoMove();
 	}
 	return nodes;

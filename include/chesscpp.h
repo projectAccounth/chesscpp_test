@@ -179,7 +179,9 @@ public:
 	// Returns the current move number, in full moves.
 	int moveNumber();
 
-	std::string getComment() const;
+	std::string getComment();
+
+	std::string deleteComment();
 
 	std::string setComment(const std::string& comment);
 
