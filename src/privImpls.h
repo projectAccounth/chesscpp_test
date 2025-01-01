@@ -45,3 +45,7 @@ int squareTo0x88(const square& sq);
 bool isValid8x8(const square& sq);
 
 bool isValid0x88(const int& sq);
+
+char pieceToChar(const pieceSymbol& p);
+
+pieceSymbol charToSymbol(const char& c);

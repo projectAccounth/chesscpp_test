@@ -20,28 +20,10 @@
 #include <vector>
 #include <variant>
 
-// Default FEN
-const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
 #include "exptypes.h"
 
 // Empty square
 #define EMPTY -1
-
-const std::map<pieceSymbol, char> ptoc = {
-    {PAWN, 'p'}, {ROOK, 'r'}, {BISHOP, 'b'}, {KNIGHT, 'n'}, {QUEEN, 'q'}, {KING, 'k'}
-};
-
-const std::map<char, color> charToColor = {
-    {'w', WHITE},
-    {'b', BLACK}
-};
-
-const std::map<char, pieceSymbol> strPchrs = {
-    {'p', pieceSymbol::p}, {'r', pieceSymbol::r}, {'b', pieceSymbol::b}, {'n', pieceSymbol::n}, {'q', pieceSymbol::q}, {'k', pieceSymbol::k}
-};
-
-const std::map<color, char> ctoc = { {WHITE, 'w'}, {BLACK, 'b'} };
 
 typedef struct internalMove {
     color color;
@@ -64,7 +46,7 @@ public:
     int moveNumber;
 };
 
-const std::map<std::string, char> FLAGS = {
+const std::unordered_map<std::string, char> FLAGS = {
     {"NORMAL", 'n'},
     {"CAPTURE", 'c'},
     {"BIG_PAWN", 'b'},

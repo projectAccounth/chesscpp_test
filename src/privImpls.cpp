@@ -11,6 +11,30 @@ std::string trim(const std::string& str) {
 	return (start < end ? std::string(start, end) : std::string());
 }
 
+char pieceToChar(const pieceSymbol& p) {
+	switch (p) {
+	case PAWN: return 'p';
+	case KNIGHT: return 'n';
+	case BISHOP: return 'p';
+	case ROOK: return 'r';
+	case QUEEN: return 'q';
+	case KING: return 'k';
+	}
+	throw std::invalid_argument("Invalid piece (at pieceToChar)");
+}
+
+pieceSymbol charToSymbol(const char& c) {
+	switch (c) {
+	case 'p': return PAWN;
+	case 'n': return KNIGHT;
+	case 'b': return BISHOP;
+	case 'r': return ROOK;
+	case 'q': return QUEEN;
+	case 'k': return KING;
+	}
+	throw std::invalid_argument("Invalid piece (at charToSymbol)");
+}
+
 bool operator<(square lhs, square rhs) {
 	return static_cast<int>(lhs) < static_cast<int>(rhs);
 }
@@ -271,7 +295,7 @@ std::optional<pieceSymbol> inferPieceType(std::string san) {
 	if (pieceType == 'o') {
 		return KING;
 	}
-	return strPchrs.at(pieceType);
+	return charToSymbol(pieceType);
 }
 
 std::string strippedSan(std::string move) {

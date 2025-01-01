@@ -21,7 +21,7 @@ void Chess::chrImpl::_updateSetup(std::string fen) {
 }
 
 bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
-	auto iter = std::find(SYMBOLS.begin(), SYMBOLS.end(), std::tolower(ptoc.at(type)));
+	auto iter = std::find(SYMBOLS.begin(), SYMBOLS.end(), std::tolower(pieceToChar(type)));
 	if (iter == SYMBOLS.end()) {
 		return false;
 	}
@@ -336,7 +336,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 	else {
 		if (m.piece != PAWN) {
 			std::string disambiguator = getDisambiguator(m, moves);
-			output += std::string(1, std::toupper(ptoc.at(m.piece))) + disambiguator;
+			output += std::string(1, std::toupper(pieceToChar(m.piece))) + disambiguator;
 		}
 		if (m.flags & (BITS.at("CAPTURE") | BITS.at("EP_CAPTURE"))) {
 			if (m.piece == PAWN) {
@@ -348,7 +348,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 		output += squareToString(algebraic(m.to));
 
 		if (m.promotion) {
-			output += std::string(1, '=') + std::string(1, std::toupper(ptoc.at(m.promotion.value())));
+			output += std::string(1, '=') + std::string(1, std::toupper(pieceToChar(m.promotion.value())));
 		}
 	}
 
@@ -580,7 +580,7 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 	}
 
 	pieceType = inferPieceType(cleanMove);
-	moves = _moves(true, (p && p.value() != "") ? strPchrs.at(std::tolower(p.value().at(0))) : pieceType);
+	moves = _moves(true, (p && p.value() != "") ? charToSymbol(std::tolower(p.value().at(0))) : pieceType);
 	if (!to) {
 		return std::nullopt;
 	}
@@ -593,20 +593,20 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 				return moves[i];
 			}
 		}
-		else if ((!p || strPchrs.at(std::tolower(p.value()[0])) == moves[i].piece) &&
+		else if ((!p || charToSymbol(std::tolower(p.value()[0])) == moves[i].piece) &&
 			squareTo0x88(from.value()) == moves[i].from && 
 			squareTo0x88(to.value()) == moves[i].to &&
-			(!promotion.has_value() || strPchrs.at(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
+			(!promotion.has_value() || charToSymbol(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
 			return moves[i];
 		}
 		else if (overlyDisambiguated) {
 			square sq = algebraic(moves[i].from);
-			if ((!p || strPchrs.at(std::tolower(p.value()[0])) == moves[i].piece) &&
+			if ((!p || charToSymbol(std::tolower(p.value()[0])) == moves[i].piece) &&
 				squareTo0x88(to.value()) == moves[i].to &&
 				(from.value() == sq) &&
 				squareTo0x88(from.value()) == moves[i].from &&
 				squareTo0x88(to.value()) == moves[i].to &&
-				(!promotion || strPchrs.at(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
+				(!promotion || charToSymbol(std::tolower(promotion.value()[0])) == moves[i].promotion)) {
 				return moves[i];
 			}
 		}
@@ -669,7 +669,7 @@ move Chess::chrImpl::_makePretty(internalMove uglyMove) {
 	}
 	if (promotion.has_value()) {
 		m.promotion = promotion;
-		m.lan += ptoc.at(promotion.value());
+		m.lan += pieceToChar(promotion.value());
 	}
 	return m;
 }

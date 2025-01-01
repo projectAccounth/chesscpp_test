@@ -320,7 +320,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 		if (chImpl->_board.at(i)) {
 			pieceSymbol p = chImpl->_board[i].value().type;
 			color c = chImpl->_board[i].value().color;
-			char symbol = c == WHITE ? std::toupper(ptoc.at(p)) : std::tolower(ptoc.at(p));
+			char symbol = c == WHITE ? std::toupper(pieceToChar(p)) : std::tolower(pieceToChar(p));
 			s += " " + std::string(1, symbol) + " ";
 		}
 		else {
@@ -359,7 +359,7 @@ std::string Chess::fen() {
 			color c = chImpl->_board[i].value().color;
 			pieceSymbol type = chImpl->_board[i].value().type;
 
-			fen += c == WHITE ? std::toupper(ptoc.at(type)) : std::tolower(ptoc.at(type));
+			fen += c == WHITE ? std::toupper(pieceToChar(type)) : std::tolower(pieceToChar(type));
 		}
 		else {
 			empty++;
@@ -429,7 +429,7 @@ std::string Chess::fen() {
 			}
 		}
 	}
-	std::vector<std::string> elements = { fen, std::string(1, ctoc.at(chImpl->_turn)), castling, epSquare, std::to_string(chImpl->_halfMoves), std::to_string(chImpl->_moveNumber) };
+	std::vector<std::string> elements = { fen, std::string(chImpl->_turn == WHITE ? "w" : "b"), castling, epSquare, std::to_string(chImpl->_halfMoves), std::to_string(chImpl->_moveNumber) };
 	return join(elements, " ");
 }
 
@@ -478,7 +478,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		else {
 			const color color = p[0] < 'a' ? WHITE : BLACK;
 			try {
-				chImpl->_put(strPchrs.at(std::tolower(p[0])), color, algebraic(squ));
+				chImpl->_put(charToSymbol(std::tolower(p[0])), color, algebraic(squ));
 			}
 			catch (const std::exception& e) {
 				std::cout << e.what() << '\n';
@@ -487,7 +487,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 			squ++;
 		}
 	}
-	chImpl->_turn = charToColor.at(tokens[1][0]);
+	chImpl->_turn = tokens[1][0] == 'w' ? WHITE : BLACK;
 
 	auto kingSideCastleWhite = std::find(tokens[2].begin(), tokens[2].end(), 'K');
 	auto queenSideCastleWhite = std::find(tokens[2].begin(), tokens[2].end(), 'Q');

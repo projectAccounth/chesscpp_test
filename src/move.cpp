@@ -59,7 +59,7 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 			stringToSquare(o.to),
 			std::nullopt,
 			std::nullopt,
-			o.promotion ? std::optional<pieceSymbol>(strPchrs.at(o.promotion.value()[0])) : std::nullopt
+			o.promotion ? std::optional<pieceSymbol>(charToSymbol(o.promotion.value()[0])) : std::nullopt
 		};
 		for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 			if (
