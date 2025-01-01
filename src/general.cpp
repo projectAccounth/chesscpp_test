@@ -317,7 +317,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 			s += (" " + std::string(1, std::string("87654321")[rankIdx]) + " |");
 		}
 
-		if (chImpl->_board.at(i)) {
+		if (chImpl->_board[i]) {
 			pieceSymbol p = chImpl->_board[i].value().type;
 			color c = chImpl->_board[i].value().color;
 			char symbol = c == WHITE ? std::toupper(pieceToChar(p)) : std::tolower(pieceToChar(p));
@@ -404,7 +404,7 @@ std::string Chess::fen() {
 				continue;
 			}
 			color ct = chImpl->_turn;
-			std::optional<piece> p = chImpl->_board.at(sq);
+			std::optional<piece> p = chImpl->_board[sq];
 			if (
 				p &&
 				p.value().color == ct &&

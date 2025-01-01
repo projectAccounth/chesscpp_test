@@ -30,7 +30,7 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	}
 	const int squ = squareTo0x88(sq);
 
-	if (type == KING && !(_kings.at(color) == EMPTY || _kings.at(color) == squ)) {
+	if (type == KING && !(_kings[color] == EMPTY || _kings[color] == squ)) {
 		return false;
 	}
 
@@ -43,7 +43,7 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	_board[squ] = { color, type };
 
 	if (type == KING) {
-		_kings.at(color) = squ;
+		_kings[color] = squ;
 	}
 	return true;
 }
@@ -145,7 +145,7 @@ bool Chess::chrImpl::_attacked(color c, int sq) {
 }
 
 bool Chess::chrImpl::_isKingAttacked(color c) {
-	const int sq = _kings.at(c);
+	const int sq = _kings[c];
 	return static_cast<int>(sq) == -1 ? false : _attacked(swapColor(c), sq);
 }
 
@@ -181,7 +181,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 		if (!_board[from] || _board[from].value().color == them)
 			continue;
 
-		pieceSymbol type = _board.at(from).value().type;
+		pieceSymbol type = _board[from].value().type;
 
 		int to;
 
@@ -202,7 +202,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 				to = from + PAWN_OFFSETS.at(us)[j];
 				if (to & 0x88) continue;
 
-				if (_board[to].has_value() && _board.at(to).value().color == them) {
+				if (_board[to].has_value() && _board[to].value().color == them) {
 					addMove(
 						moves,
 						us,
@@ -229,11 +229,11 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 					to += offset;
 					if (to & 0x88) break;
 
-					if (!_board.at(to)) {
+					if (!_board[to]) {
 						addMove(moves, us, from, to, type);
 					}
 					else {
-						if (_board.at(to).value().color == us) break;
+						if (_board[to].value().color == us) break;
 
 						addMove(
 							moves,
@@ -254,22 +254,22 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 	}
 
 	if (!forPiece || forPiece.value() == KING) {
-		if (!singleSquare || lastSquare == _kings.at(us)) {
+		if (!singleSquare || lastSquare == _kings[us]) {
 			if (_castling.at(us) & BITS.at("KSIDE_CASTLE")) {
-				const int castlingFrom = _kings.at(us);
+				const int castlingFrom = _kings[us];
 				const int castlingTo = castlingFrom + 2;
 
 				if (
-					!_board.at(castlingFrom + 1) &&
-					!_board.at(castlingTo) &&
-					!_attacked(them, _kings.at(us)) &&
+					!_board[castlingFrom + 1] &&
+					!_board[castlingTo] &&
+					!_attacked(them, _kings[(us)]) &&
 					!_attacked(them, castlingFrom + 1) &&
 					!_attacked(them, castlingTo)
 				) {
 					addMove(
 						moves,
 						us,
-						_kings.at(us),
+						_kings[us],
 						castlingTo,
 						KING,
 						std::nullopt,
@@ -283,17 +283,17 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 				const int castlingTo = castlingFrom - 2;
 
 				if (
-					!_board.at(castlingFrom - 1) &&
-					!_board.at(castlingFrom - 2) &&
-					!_board.at(castlingFrom - 3) &&
-					!_attacked(them, _kings.at(us)) &&
+					!_board[castlingFrom - 1] &&
+					!_board[castlingFrom - 2] &&
+					!_board[castlingFrom - 3] &&
+					!_attacked(them, _kings[us]) &&
 					!_attacked(them, castlingFrom - 1) &&
 					!_attacked(them, castlingTo)
 				) {
 					addMove(
 						moves,
 						us,
-						_kings.at(us),
+						_kings[us],
 						castlingTo,
 						KING,
 						std::nullopt,
@@ -307,7 +307,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(std::optional<bool> legal, std:
 	 // return all pseudo-legal moves (this includes moves that allow the king
 	 // to be captured)
 	 
-	if (!legal || _kings.at(us) == EMPTY) {
+	if (!legal || _kings[us] == EMPTY) {
 		return moves;
 	}
 
@@ -370,7 +370,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 void Chess::chrImpl::_push(internalMove move) {
 	_history.push_back({
 		move,
-		{{color::b, _kings.at(color::b)}, {color::w, _kings.at(color::w)}},
+		{{color::b, _kings[color::b]}, {color::w, _kings[color::w]}},
 		_turn,
 		{{color::b, _castling.at(color::b)}, {color::w, _castling.at(color::w)}},
 		_epSquare,
@@ -399,7 +399,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 		_board[m.to] = { us, m.promotion.value() };
 	}
 	if (_board[m.to].value().type == KING) {
-		_kings.at(us) = m.to;
+		_kings[(us)] = m.to;
 
 		if (m.flags & BITS.at("KSIDE_CASTLE")) {
 			const int castlingTo = m.to - 1;
