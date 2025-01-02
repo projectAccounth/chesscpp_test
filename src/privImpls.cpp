@@ -19,6 +19,7 @@ char pieceToChar(const pieceSymbol& p) {
 	case ROOK: return 'r';
 	case QUEEN: return 'q';
 	case KING: return 'k';
+	case PNONE: break;
 	}
 	throw std::invalid_argument("Invalid piece (at pieceToChar)");
 }
@@ -40,7 +41,7 @@ bool operator<(square lhs, square rhs) {
 }
 
 bool isValid8x8(const square& sq) {
-	return (int)(sq) >= 0 && (int)(sq) < 64;
+	return static_cast<int>(sq) >= 0 && static_cast<int>(sq) < 64;
 }
 
 bool isValid0x88(const int& sq) {
@@ -79,7 +80,7 @@ std::string join(const std::vector<std::string>& elements, const std::string& de
 }
 
 int squareTo0x88(const square& sq) {
-	return ((int)(sq) >> 3 << 4) | (int)(sq) & 7;
+	return (static_cast<int>(sq) >> 3 << 4) | static_cast<int>(sq) & 7;
 }
 
 bool isDigit(std::string c) {

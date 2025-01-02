@@ -2,12 +2,10 @@
 #ifndef EXPTYPES_H
 #define EXPTYPES_H
 
-#include <optional>
 #include <string>
 #include <map>
 #include <array>
 #include <vector>
-#include <variant>
 
 enum class square : int {
     NO_SQUARE = -1,
@@ -65,23 +63,23 @@ struct piece {
 typedef struct internalMove internalMove;
 
 typedef struct move {
-    color color;
-    square from;
-    square to;
-    pieceSymbol piece;
-    pieceSymbol captured;
-    pieceSymbol promotion;
-    std::string flags;
-    std::string san;
-    std::string lan;
-    std::string before;
-    std::string after;
+    color color = color::NO_COLOR;
+    square from = square::NO_SQUARE;
+    square to = square::NO_SQUARE;
+    pieceSymbol piece = PNONE;
+    pieceSymbol captured = PNONE;
+    pieceSymbol promotion = PNONE;
+    std::string flags = "";
+    std::string san = "";
+    std::string lan = "";
+    std::string before = "";
+    std::string after = "";
 } move;
 
 struct moveOption {
-    std::string from;
-    std::string to;
-    std::optional<std::string> promotion;
+    std::string from = "";
+    std::string to = "";
+    std::string promotion = "";
 };
 
 #endif

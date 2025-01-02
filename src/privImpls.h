@@ -1,6 +1,6 @@
 #pragma once
-#include "../include/cltypedefs.h"
-#include "../include/chesscpp.h"
+#include "cltypedefs.h"
+#include "chesscpp.h"
 #include <cmath>
 #include <tuple>
 #include <sstream>

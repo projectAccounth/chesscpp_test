@@ -7,16 +7,17 @@
 #define CHESSCPP_H
 
 #ifndef __cplusplus
-#error "This library is C++-based. Please use C++ (C++17 or above) for this library."
+#error "This library is C++-based. Please use C++ (C++14 or above) for this library."
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER < 1914)
-#error "This library requires C++17 or later. Update to Visual Studio 2017 version 15.7 or later."
+#error "This library requires C++14 or later. Update to Visual Studio 2015 or later."
 #elif !defined(_MSC_VER) && (__cplusplus < 201703L)
-#error "This library requires C++17 or later. Please use a compatible compiler or use C++17 standard with the --std=c++17 option."
+#error "This library requires C++14 or later. Please use a compatible compiler or use C++14 standard with the --std=c++14 option."
 #endif
 
 #include <utility>
+#include <unordered_map>
 
 #include "exptypes.h"
 
@@ -44,7 +45,7 @@ private:
 	chrImpl* chImpl;
 public:
 	// Clear.
-	void clear(std::optional<bool> preserveHeaders);
+	void clear(bool preserveHeaders);
 
 	// Remove header with the specified key.
 	void removeHeader(std::string key);
@@ -54,8 +55,8 @@ public:
 	* FEN, manually.
 	* 
 	* fen: string: The FEN to be passed
-	* skipValidation: optional<bool>: Skips the FEN validation. Not recommended.
-	* preserveHeaders: optional<bool>: Preserve headers.
+	* skipValidation: bool: Skips the FEN validation. Not recommended.
+	* preserveHeaders: bool: Preserve headers.
 	*
 	* Raises a runtime error when the FEN is invalid.
 	*/
@@ -81,7 +82,7 @@ public:
 	bool put(pieceSymbol type, color c, square sq);
 
 	// Removes a piece from a square. Returns std::nullopt if no pieces were removed.
-	std::optional<piece> remove(square sq);
+	piece remove(square sq);
 
 	// Checks whether the king is attacked by the other side.
 	bool isAttacked(square sq, color attackedBy);
@@ -114,9 +115,9 @@ public:
 	std::vector<std::string> moves();
 
 	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<move> moves(bool verbose, std::optional<std::string> sq, pieceSymbol piece = PNONE);
+	std::vector<move> moves(bool verbose, std::string sq, pieceSymbol piece = PNONE);
 
-	std::vector<move> moves(std::optional<std::string> sq, pieceSymbol piece);
+	std::vector<move> moves(std::string sq, pieceSymbol piece);
 	/*
 	* Moves the specified piece to a specific position on the board.
 	* 
@@ -132,10 +133,12 @@ public:
 	* 
 	* Raises an exception on a fail move.
 	*/
-	move cmove(const std::variant<std::string, moveOption>& moveArg, bool strict = false);
+	move cmove(const moveOption& moveArg);
+
+	move cmove(const std::string& moveArg, bool strict = false);
 	
 	// Undos a move.
-	std::optional<move> undo();
+	move undo();
 	
 	// Gets the current PGN of the game. Does not include results of the game.
 	std::string pgn(char newline = '\n', int maxWidth = 0);
@@ -165,16 +168,16 @@ public:
 	color turn();
 
 	// Returns the current board. Useful for analysis.
-	std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> board();
+	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> board();
 
-	// Returns the current square color of the specified square. Either "light" or "dark" is returned.
-	std::optional<std::string> squareColor(square sq);
+	// Returns the current square color of the specified square. Either "light" or "dark" or an empty string (if square is invalid) is returned.
+	std::string squareColor(square sq);
 
 	// Returns the history of the board, in the form of a string array.
 	std::vector<std::string> historys();
 	
 	// Returns the history of the board. If verbose = true, returns an array of moves. Otherwise, an array of string is returned (array of moves).
-	std::vector<std::variant<std::string, move>> history(bool verbose);
+	std::vector<std::tuple<std::string, move>> history(bool verbose);
 	
 	// Returns the history of the board, in the form of a move array.
 	std::vector<move> historym();
@@ -195,7 +198,7 @@ public:
 
 	std::vector<std::pair<std::string, std::string>> deleteComments();
 
-	bool setCastlingRights(const color& c, std::optional<std::pair<pieceSymbol, bool>> rights);
+	bool setCastlingRights(const color& c, std::pair<pieceSymbol, bool> rights);
 
 	~Chess();
 };

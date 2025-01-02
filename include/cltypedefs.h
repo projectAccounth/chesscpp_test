@@ -3,22 +3,20 @@
 #define CLTYPEDEFS_H
 
 #ifndef __cplusplus
-#error "This library is C++-based. Please use C++ (C++17 or above) for this library."
+#error "This library is C++-based. Please use C++ (C++14 or above) for this library."
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER < 1914)
-#error "This library requires C++17 or later. Update to Visual Studio 2017 version 15.7 or later."
+#error "This library requires C++14 or later. Update to Visual Studio 2015 or later."
 #elif !defined(_MSC_VER) && (__cplusplus < 201703L)
-#error "This library requires C++17 or later. Please use a compatible compiler or use C++17 standard with the --std=c++17 option."
+#error "This library requires C++14 or later. Please use a compatible compiler or use C++14 standard with the --std=c++14 option."
 #endif
 
-#include <optional>
 #include <string>
 #include <map>
 #include <unordered_map>
 #include <array>
 #include <vector>
-#include <variant>
 
 #include "exptypes.h"
 
@@ -69,12 +67,12 @@ const std::unordered_map<std::string, int> BITS = {
     {"QSIDE_CASTLE", 64}
 };
 
-const std::map<color, std::vector<int>> PAWN_OFFSETS = {
+const std::unordered_map<color, std::vector<int>> PAWN_OFFSETS = {
     {color::b, {16, 32, 17, 15}}, // Black pawn offsets
     {color::w, {-16, -32, -17, -15}} // White pawn offsets
 };
 
-const std::map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
+const std::unordered_map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
     {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
     {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
     {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
@@ -83,20 +81,20 @@ const std::map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
 };
 const std::vector<int> ATTACKS = {
     20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20, 0,
-        0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
-        0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
-        0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
-        0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
-        24, 24, 24, 24, 24, 24, 56, 0, 56, 24, 24, 24, 24, 24, 24, 0,
-        0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
-        0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
-        0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
-        0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
-        20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20
+    0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
+    0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
+    0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
+    0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
+    24, 24, 24, 24, 24, 24, 56, 0, 56, 24, 24, 24, 24, 24, 24, 0,
+    0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
+    0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
+    0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
+    0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
+    20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20
 };
 
 const std::vector<int> RAYS = {
@@ -117,7 +115,14 @@ const std::vector<int> RAYS = {
         -15, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, 0, -17
 };
 
-const std::map<pieceSymbol, int> PIECE_MASKS = {{pieceSymbol::p, 0x1}, {pieceSymbol::n, 0x2}, {pieceSymbol::b, 0x4}, {pieceSymbol::r, 0x8}, {pieceSymbol::q, 0x10}, {pieceSymbol::k, 0x20}};
+const std::map<pieceSymbol, int> PIECE_MASKS = {
+    {pieceSymbol::p, 0x1},
+    {pieceSymbol::n, 0x2},
+    {pieceSymbol::b, 0x4},
+    {pieceSymbol::r, 0x8},
+    {pieceSymbol::q, 0x10},
+    {pieceSymbol::k, 0x20}
+};
 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 

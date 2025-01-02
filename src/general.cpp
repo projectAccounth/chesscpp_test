@@ -7,7 +7,7 @@ void Chess::reset() {
 }
 
 piece::operator bool() const {
-	return (type == PNONE || color == color::NO_COLOR);
+	return (type != PNONE && color != color::NO_COLOR);
 }
 
 std::string Chess::pgn(char newline, int maxWidth) {
@@ -30,7 +30,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		}
 		return moveString;
 		};
-	std::vector<std::optional<internalMove>> reservedHistory;
+	std::vector<internalMove> reservedHistory;
 	while (chImpl->_history.size() > 0) {
 		reservedHistory.push_back(chImpl->_undoMove());
 	}
@@ -43,23 +43,23 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	}
 	while (reservedHistory.size() > 0) {
 		moveString = appendComment(moveString);
-		std::optional<internalMove> m = reservedHistory.back();
+		internalMove m = reservedHistory.back();
 		reservedHistory.pop_back();
 
 		if (!m) break;
 
-		if (chImpl->_history.size() == 0 && m.value().color == color::b) {
+		if (chImpl->_history.size() == 0 && m.color == color::b) {
 			const std::string prefix = std::to_string(chImpl->_moveNumber) + ". ...";
 			moveString = !moveString.empty() ? moveString + " " + prefix : prefix;
 		}
-		else if (m.value().color == color::w) {
+		else if (m.color == color::w) {
 			if (!moveString.empty()) {
 				moves.push_back(moveString);
 			}
 			moveString = std::to_string(chImpl->_moveNumber) + ".";
 		}
-		moveString = moveString + " " + chImpl->_moveToSan(m.value(), chImpl->_moves(true));
-		chImpl->_makeMove(m.value());
+		moveString = moveString + " " + chImpl->_moveToSan(m, chImpl->_moves(true));
+		chImpl->_makeMove(m);
 	}
 	if (!moveString.empty()) {
 		moves.push_back(appendComment(moveString));
@@ -169,7 +169,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	for (const auto& val : headers) {
 		std::string lowerStr;
 		for (char c : val.first) {
-			lowerStr += std::tolower(c);
+			lowerStr += static_cast<char>(std::tolower(c));
 		}
 		if (lowerStr == "fen") {
 			pfen = headers.at(val.first);
@@ -228,7 +228,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		std::stringstream hexStream;
 
 		for (char c : s) {
-			hexStream << "%" << std::setw(2) << std::setfill('0') << std::hex << (int)c;
+			hexStream << "%" << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(c);
 		}
 
 		return hexStream.str();
@@ -324,7 +324,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 		if (chImpl->_board[i]) {
 			pieceSymbol p = chImpl->_board[i].type;
 			color c = chImpl->_board[i].color;
-			char symbol = c == WHITE ? std::toupper(pieceToChar(p)) : std::tolower(pieceToChar(p));
+			char symbol = c == WHITE ? static_cast<char>(std::toupper(pieceToChar(p))) : static_cast<char>(std::tolower(pieceToChar(p)));
 			s += " " + std::string(1, symbol) + " ";
 		}
 		else {
@@ -363,7 +363,7 @@ std::string Chess::fen() {
 			color c = chImpl->_board[i].color;
 			pieceSymbol type = chImpl->_board[i].type;
 
-			fen += c == WHITE ? std::toupper(pieceToChar(type)) : std::tolower(pieceToChar(type));
+			fen += (c == WHITE) ? static_cast<char>(std::toupper(pieceToChar(type))) : static_cast<char>(std::tolower(pieceToChar(type)));
 		}
 		else {
 			empty++;
@@ -400,7 +400,7 @@ std::string Chess::fen() {
 
 	std::string epSquare = "-";
 
-	if (chImpl->_epSquare != (int)(EMPTY)) {
+	if (chImpl->_epSquare != static_cast<int>(EMPTY)) {
 		square bigPawnSquare = static_cast<square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
 		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
 		for (auto& sq : squares) {
@@ -408,11 +408,11 @@ std::string Chess::fen() {
 				continue;
 			}
 			color ct = chImpl->_turn;
-			std::optional<piece> p = chImpl->_board[sq];
+			piece p = chImpl->_board[sq];
 			if (
 				p &&
-				p.value().color == ct &&
-				p.value().type == PAWN
+				p.color == ct &&
+				p.type == PAWN
 				) {
 				chImpl->_makeMove({
 					ct,
@@ -482,7 +482,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 		else {
 			const color color = p[0] < 'a' ? WHITE : BLACK;
 			try {
-				chImpl->_put(charToSymbol(std::tolower(p[0])), color, algebraic(squ));
+				chImpl->_put(charToSymbol(static_cast<char>(std::tolower(p[0]))), color, algebraic(squ));
 			}
 			catch (const std::exception& e) {
 				std::cout << e.what() << '\n';
@@ -507,7 +507,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	if (queenSideCastleBlack != tokens[2].end())
 		chImpl->_castling.at(BLACK) |= BITS.at("QSIDE_CASTLE");
 
-	chImpl->_epSquare = tokens[3] == "-" ? (int)(EMPTY) : squareTo0x88(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? static_cast<int>(EMPTY) : squareTo0x88(stringToSquare(tokens[3]));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 
@@ -564,9 +564,9 @@ std::vector<move> Chess::historym() {
 	return result;
 }
 
-std::vector<std::variant<std::string, move>> Chess::history(bool verbose) {
-	std::vector<std::optional<internalMove>> reservedHistory;
-	std::vector<std::variant<std::string, move>> moveHistory;
+std::vector<std::tuple<std::string, move>> Chess::history(bool verbose) {
+	std::vector<internalMove> reservedHistory;
+	std::vector<std::tuple<std::string, move>> moveHistory;
 
 	while (chImpl->_history.size() > 0) {
 		reservedHistory.push_back(chImpl->_undoMove());
@@ -581,12 +581,12 @@ std::vector<std::variant<std::string, move>> Chess::history(bool verbose) {
 		if (!m) break;
 
 		if (verbose) {
-			moveHistory.push_back(chImpl->_makePretty(m.value()));
+			moveHistory.push_back(std::tuple<std::string, move>("", chImpl->_makePretty(m)));
 		}
 		else {
-			moveHistory.push_back(chImpl->_moveToSan(m.value(), chImpl->_moves()));
+			moveHistory.push_back(std::tuple<std::string, move>(chImpl->_moveToSan(m, chImpl->_moves()), move()));
 		}
-		chImpl->_makeMove(m.value());
+		chImpl->_makeMove(m);
 	}
 
 	return moveHistory;
