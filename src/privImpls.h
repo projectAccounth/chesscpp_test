@@ -30,11 +30,11 @@ color swapColor(color color);
 
 std::string getDisambiguator(internalMove move, std::vector<internalMove> moves);
 
-void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, std::optional<pieceSymbol> captured = std::nullopt, int flags = BITS.at("NORMAL"));
+void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, pieceSymbol captured = PNONE, int flags = BITS.at("NORMAL"));
 
 std::string replaceSubstring(const std::string& str, const std::string& from, const std::string& to);
 
-std::optional<pieceSymbol> inferPieceType(std::string san);
+pieceSymbol inferPieceType(std::string san);
 
 std::string strippedSan(std::string move);
 

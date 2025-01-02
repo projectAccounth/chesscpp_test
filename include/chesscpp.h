@@ -73,9 +73,9 @@ public:
 	void reset();
 
 	/*
-	* Returns a piece on the specified square. Returns std::nullopt if nothing is found.
+	* Returns a piece on the specified square. Returns piece() if nothing is found.
 	*/
-	std::optional<piece> get(square sq);
+	piece get(square sq);
 
 	// Puts a piece of a type on the specified square with the specified color.
 	bool put(pieceSymbol type, color c, square sq);
@@ -114,9 +114,9 @@ public:
 	std::vector<std::string> moves();
 
 	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<move> moves(bool verbose, std::optional<std::string> sq, std::optional<pieceSymbol> piece);
+	std::vector<move> moves(bool verbose, std::optional<std::string> sq, pieceSymbol piece = PNONE);
 
-	std::vector<move> moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece);
+	std::vector<move> moves(std::optional<std::string> sq, pieceSymbol piece);
 	/*
 	* Moves the specified piece to a specific position on the board.
 	* 
@@ -140,7 +140,7 @@ public:
 	// Gets the current PGN of the game. Does not include results of the game.
 	std::string pgn(char newline = '\n', int maxWidth = 0);
 	
-	std::map<std::string, std::string> header(std::vector<std::string> args ...);
+	std::unordered_map<std::string, std::string> header(std::vector<std::string> args ...);
 	
 	/*
 	* Loads the specified PGN.

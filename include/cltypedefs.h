@@ -23,27 +23,30 @@
 #include "exptypes.h"
 
 // Empty square
-#define EMPTY -1
+#define EMPTY square::NO_SQUARE
 
 typedef struct internalMove {
-    color color;
-    int from;
-    int to;
-    pieceSymbol piece;
-    std::optional<pieceSymbol> captured;
-    std::optional<pieceSymbol> promotion;
-    int flags;
+    color color = color::NO_COLOR;
+    int from = 0;
+    int to = 0;
+    pieceSymbol piece = PNONE;
+    pieceSymbol captured = PNONE;
+    pieceSymbol promotion = PNONE;
+    int flags = 0;
+
+    explicit operator bool() const;
 } internalMove;
 
 class History {
 public:
-    internalMove move;
-    std::map<color, int> kings;
-    color turn;
-    std::map<color, int> castling;
-    int epSquare;
-    int halfMoves;
-    int moveNumber;
+    internalMove move = internalMove();
+    std::unordered_map<color, int> kings = std::unordered_map<color, int>();
+    color turn = color::NO_COLOR;
+    std::unordered_map<color, int> castling = std::unordered_map<color, int>();
+    int epSquare = 0;
+    int halfMoves = 0;
+    int moveNumber = 0;
+    explicit operator bool() const;
 };
 
 const std::unordered_map<std::string, char> FLAGS = {

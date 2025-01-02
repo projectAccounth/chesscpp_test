@@ -7,10 +7,10 @@ color Chess::turn() {
 }
 
 std::optional<piece> Chess::remove(square sq) {
-	std::optional<piece> p = get(sq);
-	chImpl->_board[squareTo0x88(sq)] = std::nullopt;
-	if (p && p.value().type == KING) {
-		chImpl->_kings[p.value().color] = EMPTY;
+	piece p = get(sq);
+	chImpl->_board[squareTo0x88(sq)] = piece();
+	if (p && p.type == KING) {
+		chImpl->_kings[p.color] = (int)(EMPTY);
 	}
 	else if (!p) {
 		return std::nullopt;
@@ -20,7 +20,7 @@ std::optional<piece> Chess::remove(square sq) {
 	chImpl->_updateEnPassantSquare();
 	chImpl->_updateSetup(fen());
 
-	return p.value();
+	return p;
 }
 
 std::optional<move> Chess::undo() {
@@ -41,12 +41,12 @@ std::optional<std::string> Chess::squareColor(square sq) {
 	return std::nullopt;
 }
 
-std::optional<piece> Chess::get(square sq) {
-	return chImpl->_board[static_cast<int>(sq)] ? chImpl->_board[static_cast<int>(sq)] : std::nullopt;
+piece Chess::get(square sq) {
+	return chImpl->_board[static_cast<int>(sq)] ? chImpl->_board[static_cast<int>(sq)] : piece();
 }
 
 move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool strict) {
-	std::optional<internalMove> moveObj = std::nullopt;
+	internalMove moveObj = internalMove();
 	if (std::holds_alternative<std::string>(moveArg)) {
 		moveObj = chImpl->_moveFromSan(std::get<std::string>(moveArg), strict);
 	}
@@ -57,15 +57,15 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 			chImpl->_turn,
 			stringToSquare(o.from),
 			stringToSquare(o.to),
-			std::nullopt,
-			std::nullopt,
-			o.promotion ? std::optional<pieceSymbol>(charToSymbol(o.promotion.value()[0])) : std::nullopt
+			PNONE,
+			PNONE,
+			o.promotion ? pieceSymbol(charToSymbol(o.promotion.value()[0])) : PNONE
 		};
 		for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 			if (
 				m.from == algebraic(moves[i].from) &&
 				m.to == algebraic(moves[i].to) &&
-				(!(moves[i].promotion) || m.promotion == moves[i].promotion)
+				((moves[i].promotion == PNONE) || m.promotion == moves[i].promotion)
 				) {
 				moveObj = moves[i];
 				break;
@@ -80,9 +80,9 @@ move Chess::cmove(const std::variant<std::string, moveOption>& moveArg, bool str
 			throw std::runtime_error("Invalid move: from " + std::get<moveOption>(moveArg).from + "to " + std::get<moveOption>(moveArg).to);
 	}
 
-	move prettyMove = chImpl->_makePretty(moveObj.value());
+	move prettyMove = chImpl->_makePretty(moveObj);
 
-	chImpl->_makeMove(moveObj.value());
+	chImpl->_makeMove(moveObj);
 	chImpl->_incPositionCount(prettyMove.after);
 	return prettyMove;
 }
@@ -111,16 +111,16 @@ std::pair<bool, bool> Chess::getCastlingRights(color c) {
 }
 
 void Chess::clear(std::optional<bool> preserveHeaders) {
-	chImpl->_board = std::array<std::optional<piece>, 128>();
-	chImpl->_kings = { { color::w, EMPTY }, { color::b, EMPTY } };
+	chImpl->_board = std::array<piece, 128>();
+	chImpl->_kings = { { color::w, (int)(EMPTY) }, { color::b, (int)(EMPTY) } };
 	chImpl->_turn = WHITE;
 	chImpl->_castling = { {color::w, 0}, {color::b, 0} };
-	chImpl->_epSquare = EMPTY;
+	chImpl->_epSquare = (int)(EMPTY);
 	chImpl->_halfMoves = 0;
 	chImpl->_moveNumber = 1;
 	chImpl->_history = {};
 	chImpl->_comments = {};
-	chImpl->_header = preserveHeaders ? chImpl->_header : std::map<std::string, std::string>();
+	chImpl->_header = preserveHeaders ? chImpl->_header : std::unordered_map<std::string, std::string>();
 	chImpl->_positionCount = {};
 
 	chImpl->_header.erase("SetUp");
@@ -133,7 +133,7 @@ void Chess::removeHeader(std::string key) {
 	}
 }
 
-std::map<std::string, std::string> Chess::header(std::vector<std::string> args ...) {
+std::unordered_map<std::string, std::string> Chess::header(std::vector<std::string> args ...) {
 	for (int i = 0; i < static_cast<int>(args.size()); i += 2) {
 		chImpl->_header[args[i]] = args[i + 1];
 	}
@@ -151,8 +151,8 @@ std::vector<std::vector<std::optional<std::tuple<square, pieceSymbol, color>>>> 
 		else {
 			row.push_back(std::tuple<square, pieceSymbol, color>{
 				algebraic(i),
-					chImpl->_board[i].value().type,
-					chImpl->_board[i].value().color
+					chImpl->_board[i].type,
+					chImpl->_board[i].color
 			});
 		}
 		if ((i + 1) & 0x88) {
@@ -205,9 +205,9 @@ bool Chess::inSufficientMaterial() {
 			continue;
 		}
 
-		if (chImpl->_board[i].has_value()) {
-			pieces.at(chImpl->_board[i].value().type) = pieces.count(chImpl->_board[i].value().type) > 0 ? pieces.at(chImpl->_board[i].value().type) + 1 : 1;
-			if (chImpl->_board[i].value().type == BISHOP) {
+		if (chImpl->_board[i]) {
+			pieces.at(chImpl->_board[i].type) = pieces.count(chImpl->_board[i].type) > 0 ? pieces.at(chImpl->_board[i].type) + 1 : 1;
+			if (chImpl->_board[i].type == BISHOP) {
 				bishops.push_back(squareColor);
 			}
 			numPieces++;
@@ -247,7 +247,7 @@ bool Chess::put(pieceSymbol type, color c, square sq) {
 	return false;
 }
 
-std::vector<move> Chess::moves(bool verbose, std::optional<std::string> sq, std::optional<pieceSymbol> piece) {
+std::vector<move> Chess::moves(bool verbose, std::optional<std::string> sq, pieceSymbol piece) {
 	std::vector<internalMove> generatedMoves = chImpl->_moves(true, piece, sq);
 
 	std::vector<move> result;
@@ -286,6 +286,6 @@ std::vector<std::string> Chess::moves() {
 	return result;
 }
 
-std::vector<move> Chess::moves(std::optional<std::string> sq, std::optional<pieceSymbol> piece) {
+std::vector<move> Chess::moves(std::optional<std::string> sq, pieceSymbol piece) {
 	return moves(true, sq, piece);
 }

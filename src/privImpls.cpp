@@ -149,7 +149,7 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	}
 }
 
-void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, std::optional<pieceSymbol> captured, int flags) {
+void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, pieceSymbol captured, int flags) {
 	const int r = rank(to);
 	if (p == PAWN && (r == RANK_1 || r == RANK_8)) {
 		for (int i = 0; i < static_cast<int>(PROMOTIONS.size()); i++) {
@@ -162,7 +162,7 @@ void addMove(std::vector<internalMove>& moves, color color, int from, int to, pi
 				captured,
 				promotion,
 				flags |= static_cast<int>(BITS.at("PROMOTION"))
-				});
+			});
 		}
 	}
 	else {
@@ -172,9 +172,9 @@ void addMove(std::vector<internalMove>& moves, color color, int from, int to, pi
 			to,
 			p,
 			captured,
-			std::nullopt,
+			PNONE,
 			flags |= static_cast<int>(BITS.at("PROMOTION"))
-			});
+		});
 	}
 }
 
@@ -282,12 +282,12 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	return { true, "" };
 }
 
-std::optional<pieceSymbol> inferPieceType(std::string san) {
+pieceSymbol inferPieceType(std::string san) {
 	char pieceType = san.at(0);
 	if (pieceType >= 'a' && pieceType <= 'h') {
 		std::regex pattern("[a-h]\\d.*[a-h]\\d");
 		if (std::regex_search(san, pattern)) {
-			return std::nullopt;
+			return PNONE;
 		}
 		return PAWN;
 	}

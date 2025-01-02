@@ -7,16 +7,16 @@ private:
 public:
 	chrImpl(Chess& c) : ch(c) {}
 
-	std::array<std::optional<piece>, 128> _board;
+	std::array<piece, 128> _board;
 	color _turn = WHITE;
-	std::map<std::string, std::string> _header;
-	std::map<color, int> _kings = { { color::w, EMPTY }, { color::b, EMPTY } };
+	std::unordered_map<std::string, std::string> _header;
+	std::unordered_map<color, int> _kings = { { WHITE, (int)(EMPTY) }, { WHITE, (int)(EMPTY) } };
 	int _epSquare = -1;
 	int _halfMoves = -1;
 	int _moveNumber = 0;
 	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
-	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
+	std::unordered_map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
 
 	std::map<std::string, std::optional<int>> _positionCount;
 
@@ -32,17 +32,17 @@ public:
 
 	bool _isKingAttacked(color c);
 
-	std::vector<internalMove> _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<std::string> sq = std::nullopt);
+	std::vector<internalMove> _moves(std::optional<bool> legal = true, pieceSymbol piece = PNONE, std::optional<std::string> sq = std::nullopt);
 
 	void _push(internalMove move);
 
 	void _makeMove(internalMove move);
 
-	std::optional<internalMove> _undoMove();
+	internalMove _undoMove();
 
 	std::string _moveToSan(internalMove move, std::vector<internalMove> moves);
 
-	std::optional<internalMove> _moveFromSan(std::string move, bool strict = false);
+	internalMove _moveFromSan(std::string move, bool strict = false);
 
 	move _makePretty(internalMove uglyMove);
 

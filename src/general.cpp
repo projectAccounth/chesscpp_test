@@ -6,6 +6,10 @@ void Chess::reset() {
 	load(DEFAULT_POSITION);
 }
 
+piece::operator bool() const {
+	return (type == PNONE || color == color::NO_COLOR);
+}
+
 std::string Chess::pgn(char newline, int maxWidth) {
 	std::vector<std::string> result;
 	bool headerExists = false;
@@ -294,7 +298,7 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 		}
 		else {
 			result = "";
-			chImpl->_makeMove(m.value());
+			chImpl->_makeMove(m);
 			chImpl->_incPositionCount(fen());
 		}
 	}
@@ -318,8 +322,8 @@ std::string Chess::ascii(bool isWhitePersp) {
 		}
 
 		if (chImpl->_board[i]) {
-			pieceSymbol p = chImpl->_board[i].value().type;
-			color c = chImpl->_board[i].value().color;
+			pieceSymbol p = chImpl->_board[i].type;
+			color c = chImpl->_board[i].color;
 			char symbol = c == WHITE ? std::toupper(pieceToChar(p)) : std::tolower(pieceToChar(p));
 			s += " " + std::string(1, symbol) + " ";
 		}
@@ -351,13 +355,13 @@ std::string Chess::fen() {
 	std::string fen = "";
 
 	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
-		if (chImpl->_board[i]) {
+		if (chImpl->_board[i].type != PNONE) {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 				empty = 0;
 			}
-			color c = chImpl->_board[i].value().color;
-			pieceSymbol type = chImpl->_board[i].value().type;
+			color c = chImpl->_board[i].color;
+			pieceSymbol type = chImpl->_board[i].type;
 
 			fen += c == WHITE ? std::toupper(pieceToChar(type)) : std::tolower(pieceToChar(type));
 		}
@@ -396,7 +400,7 @@ std::string Chess::fen() {
 
 	std::string epSquare = "-";
 
-	if (chImpl->_epSquare != EMPTY) {
+	if (chImpl->_epSquare != (int)(EMPTY)) {
 		square bigPawnSquare = static_cast<square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
 		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
 		for (auto& sq : squares) {
@@ -416,7 +420,7 @@ std::string Chess::fen() {
 					chImpl->_epSquare,
 					PAWN,
 					PAWN,
-					std::nullopt,
+					PNONE,
 					BITS.at("EP_CAPTURE")
 					});
 				bool isLegal = !chImpl->_isKingAttacked(ct);
@@ -503,7 +507,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	if (queenSideCastleBlack != tokens[2].end())
 		chImpl->_castling.at(BLACK) |= BITS.at("QSIDE_CASTLE");
 
-	chImpl->_epSquare = tokens[3] == "-" ? EMPTY : squareTo0x88(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? (int)(EMPTY) : squareTo0x88(stringToSquare(tokens[3]));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 

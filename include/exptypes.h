@@ -10,6 +10,7 @@
 #include <variant>
 
 enum class square : int {
+    NO_SQUARE = -1,
     a8 = 0, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -20,10 +21,10 @@ enum class square : int {
     a1, b1, c1, d1, e1, f1, g1, h1
 };
 enum class pieceSymbol : int {
-    p, n, b, r, q, k
+    p, n, b, r, q, k, NO_PIECE = -1
 };
 enum class color {
-    w, b
+    w, b, NO_COLOR = -1
 };
 
 // Default FEN
@@ -47,6 +48,7 @@ const std::array<std::string, 64> SQUARES = {
 #define BISHOP pieceSymbol::b
 #define QUEEN pieceSymbol::q
 #define KING pieceSymbol::k
+#define PNONE pieceSymbol::NO_PIECE
 
 // Notation for white piece
 #define WHITE color::w
@@ -54,8 +56,10 @@ const std::array<std::string, 64> SQUARES = {
 #define BLACK color::b
 
 struct piece {
-    color color;
-    pieceSymbol type;
+    color color = color::NO_COLOR;
+    pieceSymbol type = PNONE;
+
+    explicit operator bool() const;
 };
 
 typedef struct internalMove internalMove;
@@ -64,9 +68,9 @@ typedef struct move {
     color color;
     square from;
     square to;
-    std::optional<pieceSymbol> piece;
-    std::optional<pieceSymbol> captured;
-    std::optional<pieceSymbol> promotion;
+    pieceSymbol piece;
+    pieceSymbol captured;
+    pieceSymbol promotion;
     std::string flags;
     std::string san;
     std::string lan;
