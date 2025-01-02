@@ -21,12 +21,6 @@
     <ClCompile Include="src\privImpls.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\moveHandling.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\generalFunctions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\move.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
