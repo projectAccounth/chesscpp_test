@@ -74,7 +74,7 @@ public:
 	void reset();
 
 	/*
-	* Returns a piece on the specified square. Returns piece() if nothing is found.
+	* Returns a piece on the specified square. Returns piece({ color::NO_COLOR, PNONE }) if nothing is found.
 	*/
 	piece get(square sq);
 

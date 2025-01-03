@@ -5,18 +5,18 @@ class Chess::chrImpl {
 private:
 	Chess& ch;
 public:
-	chrImpl(Chess& c) : ch(c) { _board.fill(piece()); }
+	chrImpl(Chess& c) : ch(c) { _board.fill(piece({ color::NO_COLOR, PNONE })); }
 
 	std::array<piece, 128> _board;
 	color _turn = WHITE;
 	std::unordered_map<std::string, std::string> _header;
-	std::unordered_map<color, int> _kings = { { WHITE, static_cast<int>(EMPTY) }, { WHITE, static_cast<int>(EMPTY) } };
+	std::map<color, int> _kings = { { WHITE, -1 }, { BLACK, -1 } };
 	int _epSquare = -1;
-	int _halfMoves = -1;
+	int _halfMoves = 0;
 	int _moveNumber = 0;
 	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
-	std::unordered_map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
+	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
 
 	std::map<std::string, int> _positionCount;
 
@@ -32,7 +32,7 @@ public:
 
 	bool _isKingAttacked(color c);
 
-	std::vector<internalMove> _moves(bool legal = true, pieceSymbol piece = PNONE, std::string sq = "");
+	std::vector<internalMove> _moves(bool legal = true, char p = 0, std::string sq = std::string());
 
 	void _push(internalMove move);
 

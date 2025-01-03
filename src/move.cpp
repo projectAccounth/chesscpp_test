@@ -8,12 +8,12 @@ color Chess::turn() {
 
 piece Chess::remove(square sq) {
 	piece p = get(sq);
-	chImpl->_board[squareTo0x88(sq)] = piece();
+	chImpl->_board[squareTo0x88(sq)] = piece({ color::NO_COLOR, PNONE });
 	if (p && p.type == KING) {
-		chImpl->_kings[p.color] = static_cast<int>(EMPTY);
+		chImpl->_kings[p.color] = -1;
 	}
 	else if (!p) {
-		return piece();
+		return piece({ color::NO_COLOR, PNONE });
 	}
 
 	chImpl->_updateCastlingRights();
@@ -42,7 +42,7 @@ std::string Chess::squareColor(square sq) {
 }
 
 piece Chess::get(square sq) {
-	return chImpl->_board[static_cast<int>(sq)] ? chImpl->_board[static_cast<int>(sq)] : piece();
+	return chImpl->_board[static_cast<int>(sq)] ? chImpl->_board[static_cast<int>(sq)] : piece({ color::NO_COLOR, PNONE });
 }
 
 move Chess::cmove(const std::string& moveArg, bool strict) {
@@ -94,7 +94,7 @@ move Chess::cmove(const moveOption& moveArg) {
 }
 
 int Chess::perft(int depth) {
-	const std::vector<internalMove> moves = chImpl->_moves(false); // get all legal moves
+	const std::vector<internalMove> moves = chImpl->_moves(false);
 	int nodes = 0;
 	color c = chImpl->_turn;
 
@@ -118,10 +118,10 @@ std::pair<bool, bool> Chess::getCastlingRights(color c) {
 
 void Chess::clear(bool preserveHeaders) {
 	chImpl->_board = std::array<piece, 128>();
-	chImpl->_kings = { { color::w, static_cast<int>(EMPTY) }, { color::b, static_cast<int>(EMPTY) } };
+	chImpl->_kings = { { color::w, -1 }, { color::b, -1 } };
 	chImpl->_turn = WHITE;
 	chImpl->_castling = { {color::w, 0}, {color::b, 0} };
-	chImpl->_epSquare = static_cast<int>(EMPTY);
+	chImpl->_epSquare = -1;
 	chImpl->_halfMoves = 0;
 	chImpl->_moveNumber = 1;
 	chImpl->_history = {};
@@ -255,7 +255,7 @@ bool Chess::put(pieceSymbol type, color c, square sq) {
 }
 
 std::vector<move> Chess::moves(bool verbose, std::string sq, pieceSymbol piece) {
-	std::vector<internalMove> generatedMoves = chImpl->_moves(true, piece, sq);
+	std::vector<internalMove> generatedMoves = chImpl->_moves(true, pieceToChar(piece), sq);
 
 	std::vector<move> result;
 	for (const auto& internal: generatedMoves) {

@@ -10,8 +10,8 @@ Chess::~Chess() { delete chImpl; }
 internalMove::operator bool() const {
 	return !(
 		color == color::NO_COLOR &&
-		from == 0 &&
-		to == 0 &&
+		from == -1 &&
+		to == -1 &&
 		piece == PNONE &&
 		captured == PNONE &&
 		promotion == PNONE &&
@@ -21,14 +21,18 @@ internalMove::operator bool() const {
 
 History::operator bool() const {
 	return !(
-		move &&
-		kings == std::unordered_map<color, int>() &&
+		!move &&
+		kings == std::map<color, int>() &&
 		turn == color::NO_COLOR &&
-		castling == std::unordered_map<color, int>() &&
-		epSquare == 0 &&
+		epSquare == -1 &&
+		castling == std::map<color, int>() &&
 		halfMoves == 0 &&
 		moveNumber == 0
 	);
+}
+
+inline bool operator!(pieceSymbol p) {
+	return p == pieceSymbol::NO_PIECE;
 }
 
 void Chess::chrImpl::_updateSetup(std::string fen) {
@@ -45,8 +49,7 @@ void Chess::chrImpl::_updateSetup(std::string fen) {
 }
 
 bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
-	auto iter = std::find(SYMBOLS.begin(), SYMBOLS.end(), std::tolower(pieceToChar(type)));
-	if (iter == SYMBOLS.end()) {
+	if (SYMBOLS.find(static_cast<char>(std::tolower(pieceToChar(type)))) == std::string::npos) {
 		return false;
 	}
 	if (!isValid8x8(sq)) {
@@ -54,14 +57,14 @@ bool Chess::chrImpl::_put(pieceSymbol type, color color, square sq) {
 	}
 	const int squ = squareTo0x88(sq);
 
-	if (type == KING && !(_kings[color] == static_cast<int>(EMPTY) || _kings[color] == squ)) {
+	if (type == KING && !(_kings[color] == -1 || _kings[color] == squ)) {
 		return false;
 	}
 
 	const piece currentPieceOnsquare = _board[squ];
 
 	if (currentPieceOnsquare && currentPieceOnsquare.type == KING) {
-		_kings[currentPieceOnsquare.color] = static_cast<int>(EMPTY);
+		_kings[currentPieceOnsquare.color] = -1;
 	}
 
 	_board[squ] = { color, type };
@@ -82,21 +85,21 @@ void Chess::chrImpl::_updateCastlingRights() {
 		_board[squareTo0x88(square::e8)].type == KING &&
 		_board[squareTo0x88(square::e8)].color == BLACK;
 	if (!whiteKingInPlace || _board[squareTo0x88(square::a1)].type != ROOK || _board[squareTo0x88(square::a1)].color != WHITE) {
-		_castling.at(color::w) &= ~BITS.at("QSIDE_CASTLE");
+		_castling.at(color::w) &= ~BITS_QSIDE_CASTLE;
 	}
 	if (!whiteKingInPlace || _board[squareTo0x88(square::h1)].type != ROOK || _board[squareTo0x88(square::h1)].color != WHITE) {
-		_castling.at(color::w) &= ~BITS.at("KSIDE_CASTLE");
+		_castling.at(color::w) &= ~BITS_KSIDE_CASTLE;
 	}
 	if (!blackKingInPlace || _board[squareTo0x88(square::a8)].type != ROOK || _board[squareTo0x88(square::a8)].color != BLACK) {
-		_castling.at(color::b) &= ~BITS.at("QSIDE_CASTLE");
+		_castling.at(color::b) &= ~BITS_QSIDE_CASTLE;
 	}
 	if (!blackKingInPlace || _board[squareTo0x88(square::h8)].type != ROOK || _board[squareTo0x88(square::h8)].color != BLACK) {
-		_castling.at(color::b) &= ~BITS.at("KSIDE_CASTLE");
+		_castling.at(color::b) &= ~BITS_KSIDE_CASTLE;
 	}
 }
 
 void Chess::chrImpl::_updateEnPassantSquare() {
-	if (_epSquare == static_cast<int>(EMPTY)) return;
+	if (_epSquare == -1) return;
 
 	const square startsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 	const square currentsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
@@ -108,7 +111,7 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 	if (stsq || epsq ||
 		_board[static_cast<int>(currentsquare)].color != swapColor(_turn) ||
 		_board[static_cast<int>(currentsquare)].type != PAWN) {
-		_epSquare = static_cast<int>(EMPTY);
+		_epSquare = -1;
 		return;
 	}
 
@@ -118,12 +121,12 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 			_board[square].type == PAWN;
 		};
 	if (std::any_of(attackers.begin(), attackers.end(), canCapture)) {
-		_epSquare = static_cast<int>(EMPTY);
+		_epSquare = -1;
 	}
 }
 
 bool Chess::chrImpl::_attacked(color c, int sq) {
-	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+	for (int i = 0; i <= squareTo0x88(square::h1); i++) {
 		if (i & 0x88) {
 			i += 7;
 			continue;
@@ -132,7 +135,7 @@ bool Chess::chrImpl::_attacked(color c, int sq) {
 		if (!currentSq || currentSq.color != c)
 			continue;
 		const piece p = currentSq;
-		const int diff = i - static_cast<int>(sq);
+		const int diff = i - sq;
 
 		if (diff == 0) continue;
 
@@ -148,7 +151,7 @@ bool Chess::chrImpl::_attacked(color c, int sq) {
 				continue;
 			}
 
-			if (p.type == pieceSymbol::n || p.type == pieceSymbol::k) return true;
+			if (p.type == KNIGHT || p.type == KING) return true;
 
 			const int offset = RAYS[index];
 			int j = i + offset;
@@ -170,16 +173,16 @@ bool Chess::chrImpl::_attacked(color c, int sq) {
 
 bool Chess::chrImpl::_isKingAttacked(color c) {
 	const int sq = _kings[c];
-	return static_cast<int>(sq) == -1 ? false : _attacked(swapColor(c), sq);
+	return sq == -1 ? false : _attacked(swapColor(c), sq);
 }
 
-std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std::string sq) {
+std::vector<internalMove> Chess::chrImpl::_moves(bool legal, char p, std::string sq) {
 	std::vector<internalMove> moves;
 	color us = _turn;
 	color them = swapColor(us);
-
+	
 	square forSquare = !sq.empty() ? stringToSquare(sq) : EMPTY;
-	pieceSymbol forPiece = p;
+	pieceSymbol forPiece = p != 0 ? charToSymbol(static_cast<char>(std::tolower(p))) : PNONE;
 
 	int firstSquare = squareTo0x88(square::a8);
 	int lastSquare = squareTo0x88(square::h1);
@@ -202,15 +205,14 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 			continue;
 		}
 
-		if (!_board[from] || _board[from].color == them)
-			continue;
+		if (!_board[from] || _board[from].color == them) continue;
 
 		pieceSymbol type = _board[from].type;
 
 		int to;
 
 		if (type == PAWN) {
-			if (forPiece != PNONE && forPiece != type) continue;
+			if ((forPiece != PNONE) && (forPiece != type)) continue;
 
 			to = from + PAWN_OFFSETS.at(us)[0];
 			if (!_board[to]) {
@@ -218,7 +220,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 
 				to = from + PAWN_OFFSETS.at(us)[1];
 				if (SECOND_RANK.at(us) == rank(from) && !_board[to]) {
-					addMove(moves, us, from, to, PAWN, PNONE, BITS.at("BIG_PAWN"));
+					addMove(moves, us, from, to, PAWN, PNONE, BITS_BIG_PAWN);
 				}
 			}
 
@@ -234,11 +236,11 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 						to,
 						PAWN,
 						_board[to].type,
-						BITS.at("CAPTURE")
+						BITS_CAPTURE
 					);
 				}
 				else if (to == _epSquare) {
-					addMove(moves, us, from, to, PAWN, PAWN, BITS.at("EP_CAPTURE"));
+					addMove(moves, us, from, to, PAWN, PAWN, BITS_EP_CAPTURE);
 				}
 			}
 		}
@@ -266,7 +268,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 							to,
 							type,
 							_board[to].type,
-							BITS.at("CAPTURE")
+							BITS_CAPTURE
 						);
 						break;
 					}
@@ -279,7 +281,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 
 	if (forPiece == PNONE || forPiece == KING) {
 		if (!singleSquare || lastSquare == _kings[us]) {
-			if (_castling.at(us) & BITS.at("KSIDE_CASTLE")) {
+			if (_castling.at(us) & BITS_KSIDE_CASTLE) {
 				const int castlingFrom = _kings[us];
 				const int castlingTo = castlingFrom + 2;
 
@@ -297,12 +299,12 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 						castlingTo,
 						KING,
 						PNONE,
-						BITS.at("KSIDE_CASTLE")
+						BITS_KSIDE_CASTLE
 					);
 				}
 			}
 
-			if (_castling[us] & BITS.at("QSIDE_CASTLE")) {
+			if (_castling[us] & BITS_QSIDE_CASTLE) {
 				const int castlingFrom = _kings[us];
 				const int castlingTo = castlingFrom - 2;
 
@@ -321,7 +323,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 						castlingTo,
 						KING,
 						PNONE,
-						BITS.at("QSIDE_CASTLE")
+						BITS_QSIDE_CASTLE
 					);
 				}
 			}
@@ -331,7 +333,7 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 	 // return all pseudo-legal moves (this includes moves that allow the king
 	 // to be captured)
 	 
-	if (!legal || _kings[us] == static_cast<int>(EMPTY)) {
+	if (!legal || _kings[us] == -1) {
 		return moves;
 	}
 
@@ -351,10 +353,10 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove> moves) {
 	std::string output = "";
 
-	if (m.flags & BITS.at("KSIDE_CASTLE")) {
+	if (m.flags & BITS_KSIDE_CASTLE) {
 		output = "O-O";
 	}
-	else if (m.flags & BITS.at("QSIDE_CASTLE")) {
+	else if (m.flags & BITS_QSIDE_CASTLE) {
 		output = "O-O-O";
 	}
 	else {
@@ -362,7 +364,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 			std::string disambiguator = getDisambiguator(m, moves);
 			output += std::string(1, static_cast<char>(std::toupper(pieceToChar(m.piece)))) + disambiguator;
 		}
-		if (m.flags & (BITS.at("CAPTURE") | BITS.at("EP_CAPTURE"))) {
+		if (m.flags & (BITS_CAPTURE | BITS_EP_CAPTURE)) {
 			if (m.piece == PAWN) {
 				output += squareToString(algebraic(m.from))[0];
 			}
@@ -409,14 +411,14 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 	_push(m);
 
 	_board[m.to] = _board[m.from];
-	_board[m.from] = piece();
+	_board[m.from] = piece({ color::NO_COLOR, PNONE });
 
-	if (m.flags & BITS.at("EP_CAPTURE")) {
+	if (m.flags & BITS_EP_CAPTURE) {
 		if (_turn == BLACK) {
-			_board[m.to - 16] = piece();
+			_board[m.to - 16] = piece({ color::NO_COLOR, PNONE });
 		}
 		else {
-			_board[m.to + 16] = piece();
+			_board[m.to + 16] = piece({ color::NO_COLOR, PNONE });
 		}
 	}
 	if (m.promotion != PNONE) {
@@ -425,17 +427,17 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 	if (_board[m.to].type == KING) {
 		_kings[(us)] = m.to;
 
-		if (m.flags & BITS.at("KSIDE_CASTLE")) {
+		if (m.flags & BITS_KSIDE_CASTLE) {
 			const int castlingTo = m.to - 1;
 			const int castlingFrom = m.to + 1;
 			_board[castlingTo] = _board[castlingFrom];
-			_board[castlingFrom] = piece();
+			_board[castlingFrom] = piece({ color::NO_COLOR, PNONE });
 		}
-		else if (m.flags & BITS.at("QSIDE_CASTLE")) {
+		else if (m.flags & BITS_QSIDE_CASTLE) {
 			const int castlingTo = m.to + 1;
 			const int castlingFrom = m.to - 2;
 			_board[castlingTo] = _board[castlingFrom];
-			_board[castlingFrom] = piece();
+			_board[castlingFrom] = piece({ color::NO_COLOR, PNONE });
 		}
 
 		_castling.at(us) = 0;
@@ -462,7 +464,7 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 			}
 		}
 	}
-	if (m.flags & BITS.at("BIG_PAWN")) {
+	if (m.flags & BITS_BIG_PAWN) {
 		if (us == BLACK) {
 			_epSquare = m.to - 16;
 		}
@@ -471,12 +473,12 @@ void Chess::chrImpl::_makeMove(internalMove m) {
 		}
 	}
 	else {
-		_epSquare = static_cast<int>(EMPTY);
+		_epSquare = -1;
 	}
 	if (m.piece == PAWN) {
 		_halfMoves = 0;
 	}
-	else if (m.flags & (BITS.at("CAPTURE") | BITS.at("EP_CAPTURE"))) {
+	else if (m.flags & (BITS_CAPTURE | BITS_EP_CAPTURE)) {
 		_halfMoves = 0;
 	}
 	else {
@@ -509,10 +511,10 @@ internalMove Chess::chrImpl::_undoMove() {
 
 	_board[m.from] = _board[m.to];
 	_board[m.from].type = m.piece;
-	_board[m.to] = piece();
+	_board[m.to] = piece({ color::NO_COLOR, PNONE });
 
 	if (m.captured != PNONE) {
-		if (m.flags & BITS.at("EP_CAPTURE")) {
+		if (m.flags & BITS_EP_CAPTURE) {
 			int index;
 			if (us == BLACK) {
 				index = m.to - 16;
@@ -526,9 +528,9 @@ internalMove Chess::chrImpl::_undoMove() {
 			_board[m.to] = { them, m.captured };
 		}
 	}
-	if (m.flags & (BITS.at("KSIDE_CASTLE") | BITS.at("QSIDE_CASTLE"))) {
+	if (m.flags & (BITS_KSIDE_CASTLE | BITS_QSIDE_CASTLE)) {
 		int castlingTo, castlingFrom;
-		if (m.flags & BITS.at("KSIDE_CASTLE")) {
+		if (m.flags & BITS_KSIDE_CASTLE) {
 			castlingTo = m.to + 1;
 			castlingFrom = m.to - 1;
 		}
@@ -537,7 +539,7 @@ internalMove Chess::chrImpl::_undoMove() {
 			castlingFrom = m.to + 1;
 		}
 		_board[castlingTo] = _board[castlingFrom];
-		_board[castlingFrom] = piece();
+		_board[castlingFrom] = piece({ color::NO_COLOR, PNONE });
 	}
 	return m;
 }
@@ -546,7 +548,7 @@ internalMove Chess::chrImpl::_moveFromSan(std::string move, bool strict) {
 	const std::string cleanMove = strippedSan(move);
 
 	pieceSymbol pieceType = inferPieceType(cleanMove);
-	std::vector<internalMove> moves = _moves(true, pieceType);
+	std::vector<internalMove> moves = _moves(true, pieceToChar(pieceType));
 
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 		if (cleanMove == strippedSan(_moveToSan(moves[i], moves))) {
@@ -604,7 +606,7 @@ internalMove Chess::chrImpl::_moveFromSan(std::string move, bool strict) {
 	}
 
 	pieceType = inferPieceType(cleanMove);
-	moves = _moves(true, (!p.empty()) ? charToSymbol(static_cast<char>(std::tolower(static_cast<char>(p.at(0))))) : pieceType);
+	moves = _moves(true, (!p.empty() ? p.at(0) : pieceToChar(pieceType)));
 	if (to == EMPTY) {
 		return internalMove();
 	}
@@ -671,9 +673,18 @@ move Chess::chrImpl::_makePretty(internalMove uglyMove) {
 	pieceSymbol cpd = uglyMove.captured;
 	pieceSymbol promotion = uglyMove.promotion;
 
+	const std::vector<int> BITS = { BITS_BIG_PAWN, BITS_CAPTURE, BITS_EP_CAPTURE, BITS_KSIDE_CASTLE, BITS_NORMAL, BITS_PROMOTION, BITS_QSIDE_CASTLE };
 	for (auto& val : BITS) {
-		if (val.second & flags) {
-			prettyFlags += FLAGS.at(val.first);
+		if (val & flags) {
+			switch (val) {
+			case BITS_BIG_PAWN: prettyFlags += FLAGS_BIG_PAWN; break;
+			case BITS_EP_CAPTURE: prettyFlags += FLAGS_EP_CAPTURE; break;
+			case BITS_CAPTURE: prettyFlags += FLAGS_CAPTURE; break;
+			case BITS_KSIDE_CASTLE: prettyFlags += FLAGS_KSIDE_CASTLE; break;
+			case BITS_QSIDE_CASTLE: prettyFlags += FLAGS_QSIDE_CASTLE; break;
+			case BITS_PROMOTION: prettyFlags += FLAGS_PROMOTION; break;
+			case BITS_NORMAL: prettyFlags += FLAGS_NORMAL; break;
+			}
 		}
 	}
 
@@ -715,7 +726,7 @@ void Chess::chrImpl::_pruneComments() {
 	copyComment(ch.fen());
 
 	while (true) {
-		internalMove m = reservedHistory[reservedHistory.size() - 1];
+		internalMove m = reservedHistory.back();
 		if (!m) break;
 		_makeMove(m);
 		copyComment(ch.fen());

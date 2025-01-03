@@ -25,8 +25,8 @@
 
 typedef struct internalMove {
     color color = color::NO_COLOR;
-    int from = 0;
-    int to = 0;
+    int from = -1;
+    int to = -1;
     pieceSymbol piece = PNONE;
     pieceSymbol captured = PNONE;
     pieceSymbol promotion = PNONE;
@@ -38,34 +38,30 @@ typedef struct internalMove {
 class History {
 public:
     internalMove move = internalMove();
-    std::unordered_map<color, int> kings = std::unordered_map<color, int>();
+    std::map<color, int> kings = std::map<color, int>();
     color turn = color::NO_COLOR;
-    std::unordered_map<color, int> castling = std::unordered_map<color, int>();
-    int epSquare = 0;
+    std::map<color, int> castling = std::map<color, int>();
+    int epSquare = -1;
     int halfMoves = 0;
     int moveNumber = 0;
     explicit operator bool() const;
 };
 
-const std::unordered_map<std::string, char> FLAGS = {
-    {"NORMAL", 'n'},
-    {"CAPTURE", 'c'},
-    {"BIG_PAWN", 'b'},
-    {"EP_CAPTURE", 'e'},
-    {"PROMOTION", 'p'},
-    {"KSIDE_CASTLE", 'k'},
-    {"QSIDE_CASTLE", 'q'}
-};
+const char FLAGS_NORMAL = 'n';
+const char FLAGS_CAPTURE = 'c';
+const char FLAGS_BIG_PAWN = 'b';
+const char FLAGS_EP_CAPTURE = 'e';
+const char FLAGS_PROMOTION = 'e';
+const char FLAGS_KSIDE_CASTLE = 'k';
+const char FLAGS_QSIDE_CASTLE = 'q';
 
-const std::unordered_map<std::string, int> BITS = {
-    {"NORMAL", 1},
-    {"CAPTURE", 2},
-    {"BIG_PAWN", 4},
-    {"EP_CAPTURE", 8},
-    {"PROMOTION", 16},
-    {"KSIDE_CASTLE", 32},
-    {"QSIDE_CASTLE", 64}
-};
+const int BITS_NORMAL = 1;
+const int BITS_CAPTURE = 2;
+const int BITS_BIG_PAWN = 4;
+const int BITS_EP_CAPTURE = 8;
+const int BITS_PROMOTION = 16;
+const int BITS_KSIDE_CASTLE = 32;
+const int BITS_QSIDE_CASTLE = 64;
 
 const std::unordered_map<color, std::vector<int>> PAWN_OFFSETS = {
     {color::b, {16, 32, 17, 15}}, // Black pawn offsets
@@ -80,42 +76,42 @@ const std::unordered_map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
     {KING, {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
 };
 const std::vector<int> ATTACKS = {
-    20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20, 0,
-    0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
-    0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
-    0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
-    0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
-    24, 24, 24, 24, 24, 24, 56, 0, 56, 24, 24, 24, 24, 24, 24, 0,
-    0, 0, 0, 0, 0, 2, 53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 20, 2, 24, 2, 20, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 20, 0, 0, 24, 0, 0, 20, 0, 0, 0, 0, 0,
-    0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
-    0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
-    0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
-    20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20
+  20, 0, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0, 0,20, 0,
+   0,20, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0,20, 0, 0,
+   0, 0,20, 0, 0, 0, 0, 24,  0, 0, 0, 0,20, 0, 0, 0,
+   0, 0, 0,20, 0, 0, 0, 24,  0, 0, 0,20, 0, 0, 0, 0,
+   0, 0, 0, 0,20, 0, 0, 24,  0, 0,20, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0,20, 2, 24,  2,20, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 2,53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
+  24,24,24,24,24,24,56,  0, 56,24,24,24,24,24,24, 0,
+   0, 0, 0, 0, 0, 2,53, 56, 53, 2, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0,20, 2, 24,  2,20, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0,20, 0, 0, 24,  0, 0,20, 0, 0, 0, 0, 0,
+   0, 0, 0,20, 0, 0, 0, 24,  0, 0, 0,20, 0, 0, 0, 0,
+   0, 0,20, 0, 0, 0, 0, 24,  0, 0, 0, 0,20, 0, 0, 0,
+   0,20, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0,20, 0, 0,
+  20, 0, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0, 0,20
 };
 
 const std::vector<int> RAYS = {
-    17, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 15, 0,
-        0, 17, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 15, 0, 0,
-        0, 0, 17, 0, 0, 0, 0, 16, 0, 0, 0, 0, 15, 0, 0, 0,
-        0, 0, 0, 17, 0, 0, 0, 16, 0, 0, 0, 15, 0, 0, 0, 0,
-        0, 0, 0, 0, 17, 0, 0, 16, 0, 0, 15, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 17, 0, 16, 0, 15, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 17, 16, 15, 0, 0, 0, 0, 0, 0, 0,
-        1, 1, 1, 1, 1, 1, 1, 0, -1, -1, -1, -1, -1, -1, -1, 0,
-        0, 0, 0, 0, 0, 0, -15, -16, -17, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, -15, 0, -16, 0, -17, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, -15, 0, 0, -16, 0, 0, -17, 0, 0, 0, 0, 0,
-        0, 0, 0, -15, 0, 0, 0, -16, 0, 0, 0, -17, 0, 0, 0, 0,
-        0, 0, -15, 0, 0, 0, 0, -16, 0, 0, 0, 0, -17, 0, 0, 0,
-        0, -15, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, -17, 0, 0,
-        -15, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, 0, -17
+   17,  0,  0,  0,  0,  0,  0, 16,  0,  0,  0,  0,  0,  0, 15, 0,
+    0, 17,  0,  0,  0,  0,  0, 16,  0,  0,  0,  0,  0, 15,  0, 0,
+    0,  0, 17,  0,  0,  0,  0, 16,  0,  0,  0,  0, 15,  0,  0, 0,
+    0,  0,  0, 17,  0,  0,  0, 16,  0,  0,  0, 15,  0,  0,  0, 0,
+    0,  0,  0,  0, 17,  0,  0, 16,  0,  0, 15,  0,  0,  0,  0, 0,
+    0,  0,  0,  0,  0, 17,  0, 16,  0, 15,  0,  0,  0,  0,  0, 0,
+    0,  0,  0,  0,  0,  0, 17, 16, 15,  0,  0,  0,  0,  0,  0, 0,
+    1,  1,  1,  1,  1,  1,  1,  0, -1, -1,  -1,-1, -1, -1, -1, 0,
+    0,  0,  0,  0,  0,  0,-15,-16,-17,  0,  0,  0,  0,  0,  0, 0,
+    0,  0,  0,  0,  0,-15,  0,-16,  0,-17,  0,  0,  0,  0,  0, 0,
+    0,  0,  0,  0,-15,  0,  0,-16,  0,  0,-17,  0,  0,  0,  0, 0,
+    0,  0,  0,-15,  0,  0,  0,-16,  0,  0,  0,-17,  0,  0,  0, 0,
+    0,  0,-15,  0,  0,  0,  0,-16,  0,  0,  0,  0,-17,  0,  0, 0,
+    0,-15,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,-17,  0, 0,
+  -15,  0,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,  0,-17
 };
 
-const std::map<pieceSymbol, int> PIECE_MASKS = {
+const std::unordered_map<pieceSymbol, int> PIECE_MASKS = {
     {pieceSymbol::p, 0x1},
     {pieceSymbol::n, 0x2},
     {pieceSymbol::b, 0x4},
@@ -128,9 +124,9 @@ const std::string SYMBOLS = "pnbrqkPNBRQK";
 
 const std::array<pieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
-const std::map<pieceSymbol, int> SIDES = {
-    {KING, BITS.at("KSIDE_CASTLE")},
-    {QUEEN, BITS.at("QSIDE_CASTLE")}
+const std::unordered_map<pieceSymbol, int> SIDES = {
+    {KING, BITS_KSIDE_CASTLE},
+    {QUEEN, BITS_QSIDE_CASTLE}
 };
 
 struct RookPosition {
@@ -138,14 +134,14 @@ struct RookPosition {
     int flag;
 };
 
-const std::map<color, std::vector<RookPosition>> ROOKS = {
+const std::unordered_map<color, std::vector<RookPosition>> ROOKS = {
     {color::w, {
-        {0, BITS.at("QSIDE_CASTLE")},
-        {7, BITS.at("KSIDE_CASTLE")}
+        {112, BITS_QSIDE_CASTLE},
+        {119, BITS_KSIDE_CASTLE}
     }},
     {color::b, {
-        {56, BITS.at("QSIDE_CASTLE")},
-        {63, BITS.at("KSIDE_CASTLE")}
+        {0, BITS_QSIDE_CASTLE},
+        {7, BITS_KSIDE_CASTLE}
     }}
 };
 
@@ -157,7 +153,7 @@ const int RANK_8 = 0;
 
 const std::vector<std::string> TERMINATION_MARKERS = { "1-0", "0-1", "1/2-1/2", "*" };
 
-const std::map<color, int> SECOND_RANK = {
+const std::unordered_map<color, int> SECOND_RANK = {
     {color::w, RANK_2}, {color::b, RANK_7}
 };
 

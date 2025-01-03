@@ -162,7 +162,7 @@ void addMove(std::vector<internalMove>& moves, color color, int from, int to, pi
 				p,
 				captured,
 				promotion,
-				flags |= static_cast<int>(BITS.at("PROMOTION"))
+				flags |= static_cast<int>(BITS_PROMOTION)
 			});
 		}
 	}
@@ -174,7 +174,7 @@ void addMove(std::vector<internalMove>& moves, color color, int from, int to, pi
 			p,
 			captured,
 			PNONE,
-			flags |= static_cast<int>(BITS.at("PROMOTION"))
+			flags
 		});
 	}
 }

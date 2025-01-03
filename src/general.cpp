@@ -7,7 +7,7 @@ void Chess::reset() {
 }
 
 piece::operator bool() const {
-	return (type != PNONE && color != color::NO_COLOR);
+	return !(type == PNONE && color == color::NO_COLOR);
 }
 
 std::string Chess::pgn(char newline, int maxWidth) {
@@ -383,16 +383,16 @@ std::string Chess::fen() {
 	}
 
 	std::string castling = "";
-	if (chImpl->_castling[WHITE] & BITS.at("KSIDE_CASTLE")) {
+	if (chImpl->_castling[WHITE] & BITS_KSIDE_CASTLE) {
 		castling += 'K';
 	}
-	if (chImpl->_castling[WHITE] & BITS.at("QSIDE_CASTLE")) {
+	if (chImpl->_castling[WHITE] & BITS_QSIDE_CASTLE) {
 		castling += 'Q';
 	}
-	if (chImpl->_castling[BLACK] & BITS.at("KSIDE_CASTLE")) {
+	if (chImpl->_castling[BLACK] & BITS_KSIDE_CASTLE) {
 		castling += 'k';
 	}
-	if (chImpl->_castling[BLACK] & BITS.at("QSIDE_CASTLE")) {
+	if (chImpl->_castling[BLACK] & BITS_QSIDE_CASTLE) {
 		castling += 'q';
 	}
 
@@ -400,7 +400,7 @@ std::string Chess::fen() {
 
 	std::string epSquare = "-";
 
-	if (chImpl->_epSquare != static_cast<int>(EMPTY)) {
+	if (chImpl->_epSquare != -1) {
 		square bigPawnSquare = static_cast<square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
 		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
 		for (auto& sq : squares) {
@@ -421,7 +421,7 @@ std::string Chess::fen() {
 					PAWN,
 					PAWN,
 					PNONE,
-					BITS.at("EP_CAPTURE")
+					BITS_EP_CAPTURE
 					});
 				bool isLegal = !chImpl->_isKingAttacked(ct);
 				chImpl->_undoMove();
@@ -499,15 +499,15 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	auto queenSideCastleBlack = std::find(tokens[2].begin(), tokens[2].end(), 'q');
 
 	if (kingSideCastleWhite != tokens[2].end())
-		chImpl->_castling.at(WHITE) |= BITS.at("KSIDE_CASTLE");
+		chImpl->_castling.at(WHITE) |= BITS_KSIDE_CASTLE;
 	if (queenSideCastleWhite != tokens[2].end())
-		chImpl->_castling.at(WHITE) |= BITS.at("QSIDE_CASTLE");
+		chImpl->_castling.at(WHITE) |= BITS_QSIDE_CASTLE;
 	if (kingSideCastleBlack != tokens[2].end())
-		chImpl->_castling.at(BLACK) |= BITS.at("KSIDE_CASTLE");
+		chImpl->_castling.at(BLACK) |= BITS_KSIDE_CASTLE;
 	if (queenSideCastleBlack != tokens[2].end())
-		chImpl->_castling.at(BLACK) |= BITS.at("QSIDE_CASTLE");
+		chImpl->_castling.at(BLACK) |= BITS_QSIDE_CASTLE;
 
-	chImpl->_epSquare = tokens[3] == "-" ? static_cast<int>(EMPTY) : squareTo0x88(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? -1 : squareTo0x88(stringToSquare(tokens[3]));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 
