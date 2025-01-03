@@ -40,12 +40,105 @@ std::string strippedSan(std::string move);
 
 std::string trimFen(std::string fen);
 
-int squareTo0x88(const square& sq);
+namespace privs {
 
-bool isValid8x8(const square& sq);
+	static inline std::vector<RookPosition> getRookInf(const color& c) {
+		switch (c) {
+		case BLACK: return { { 0, BITS_QSIDE_CASTLE }, { 7, BITS_KSIDE_CASTLE } };
+		case WHITE: return { { 112, BITS_QSIDE_CASTLE }, { 119, BITS_KSIDE_CASTLE } };
+		case color::NO_COLOR: break;
+		}
+		throw std::invalid_argument("Invalid piece (at getRookInf)");
+	}
 
-bool isValid0x88(const int& sq);
+	static inline int getSecondRank(const color& c) {
+		switch (c) {
+		case BLACK: return RANK_7;
+		case WHITE: return RANK_2;
+		case color::NO_COLOR: break;
+		}
+		throw std::invalid_argument("Invalid piece (at getSecondRank)");
+	}
 
-char pieceToChar(const pieceSymbol& p);
+	static inline int getCastlingSide(const pieceSymbol& p) {
+		switch (p) {
+		case KING: return BITS_KSIDE_CASTLE;
+		case QUEEN: return BITS_QSIDE_CASTLE;
+		default: break;
+		}
+		throw std::invalid_argument("Invalid piece (at getCastlingSide)");
+	}
 
-pieceSymbol charToSymbol(const char& c);
+	static inline pieceSymbol charToSymbol(const char& c) {
+		switch (c) {
+		case 'p': return PAWN;
+		case 'n': return KNIGHT;
+		case 'b': return BISHOP;
+		case 'r': return ROOK;
+		case 'q': return QUEEN;
+		case 'k': return KING;
+		}
+		throw std::invalid_argument("Invalid piece (at charToSymbol)");
+	}
+
+	static inline char pieceToChar(const pieceSymbol& p) {
+		switch (p) {
+		case PAWN: return 'p';
+		case KNIGHT: return 'n';
+		case BISHOP: return 'p';
+		case ROOK: return 'r';
+		case QUEEN: return 'q';
+		case KING: return 'k';
+		case PNONE: break;
+		}
+		throw std::invalid_argument("Invalid piece (at pieceToChar)");
+	}
+
+	static inline std::vector<int> getPieceOffsets(const pieceSymbol& p) {
+		switch (p) {
+		case KNIGHT: return { -18, -33, -31, -14, 18, 33, 31, 14 };
+		case BISHOP: return { -17, -15, 17, 15 };
+		case ROOK: return { -16, 1, 16, -1 };
+		case QUEEN: return { -17, -16, -15, 1, 17, 16, 15, -1 };
+		case KING: return { -17, -16, -15, 1, 17, 16, 15, -1 };
+		case PAWN: break;
+		case PNONE: break;
+		}
+		throw std::invalid_argument("Invalid piece (or not supported) (at getPieceOffsets)");
+	}
+
+	static inline int getPieceMasks(const pieceSymbol& p) {
+		switch (p) {
+		case PAWN: return 0x1;
+		case KNIGHT: return 0x2;
+		case BISHOP: return 0x4;
+		case ROOK: return 0x8;
+		case QUEEN: return 0x10;
+		case KING: return 0x20;
+		case PNONE: break;
+		}
+		throw std::invalid_argument("Invalid piece (at getPieceMasks)");
+	}
+
+	static inline std::vector<int> getPawnOffsets(const color& c) {
+		switch (c) {
+		case BLACK: return { 16, 32, 17, 15 };
+		case WHITE: return { -16, -32, -17, -15 };
+		case color::NO_COLOR: break;
+		}
+		throw std::invalid_argument("Invalid piece (at getPawnOffsets)");
+	}
+
+	static inline bool isValid8x8(const square& sq) {
+		return static_cast<int>(sq) >= 0 && static_cast<int>(sq) < 64;
+	}
+
+	static inline bool isValid0x88(const int& sq) {
+		return (sq & 0x88) == 0;
+	}
+
+	static inline int squareTo0x88(const square& sq) {
+		return (static_cast<int>(sq) >> 3 << 4) | (static_cast<int>(sq) & 7);
+	}
+
+}

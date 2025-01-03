@@ -11,41 +11,8 @@ std::string trim(const std::string& str) {
 	return (start < end ? std::string(start, end) : std::string());
 }
 
-char pieceToChar(const pieceSymbol& p) {
-	switch (p) {
-	case PAWN: return 'p';
-	case KNIGHT: return 'n';
-	case BISHOP: return 'p';
-	case ROOK: return 'r';
-	case QUEEN: return 'q';
-	case KING: return 'k';
-	case PNONE: break;
-	}
-	throw std::invalid_argument("Invalid piece (at pieceToChar)");
-}
-
-pieceSymbol charToSymbol(const char& c) {
-	switch (c) {
-	case 'p': return PAWN;
-	case 'n': return KNIGHT;
-	case 'b': return BISHOP;
-	case 'r': return ROOK;
-	case 'q': return QUEEN;
-	case 'k': return KING;
-	}
-	throw std::invalid_argument("Invalid piece (at charToSymbol)");
-}
-
 bool operator<(square lhs, square rhs) {
 	return static_cast<int>(lhs) < static_cast<int>(rhs);
-}
-
-bool isValid8x8(const square& sq) {
-	return static_cast<int>(sq) >= 0 && static_cast<int>(sq) < 64;
-}
-
-bool isValid0x88(const int& sq) {
-	return (sq & 0x88) == 0;
 }
 
 std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -77,10 +44,6 @@ std::string join(const std::vector<std::string>& elements, const std::string& de
 	}
 
 	return result;
-}
-
-int squareTo0x88(const square& sq) {
-	return (static_cast<int>(sq) >> 3 << 4) | static_cast<int>(sq) & 7;
 }
 
 bool isDigit(std::string c) {
@@ -130,10 +93,10 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 
 		ambiguities++;
 
-		if (rank(squareTo0x88(from)) == rank(squareTo0x88(ambigFrom))) {
+		if (rank(privs::squareTo0x88(from)) == rank(privs::squareTo0x88(ambigFrom))) {
 			sameRank++;
 		}
-		if (file(squareTo0x88(from)) == file(squareTo0x88(ambigFrom))) {
+		if (file(privs::squareTo0x88(from)) == file(privs::squareTo0x88(ambigFrom))) {
 			sameFile++;
 		}
 	}
@@ -296,7 +259,7 @@ pieceSymbol inferPieceType(std::string san) {
 	if (pieceType == 'o') {
 		return KING;
 	}
-	return charToSymbol(pieceType);
+	return privs::charToSymbol(pieceType);
 }
 
 std::string strippedSan(std::string move) {

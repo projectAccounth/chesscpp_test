@@ -51,7 +51,7 @@ const char FLAGS_NORMAL = 'n';
 const char FLAGS_CAPTURE = 'c';
 const char FLAGS_BIG_PAWN = 'b';
 const char FLAGS_EP_CAPTURE = 'e';
-const char FLAGS_PROMOTION = 'e';
+const char FLAGS_PROMOTION = 'p';
 const char FLAGS_KSIDE_CASTLE = 'k';
 const char FLAGS_QSIDE_CASTLE = 'q';
 
@@ -63,18 +63,6 @@ const int BITS_PROMOTION = 16;
 const int BITS_KSIDE_CASTLE = 32;
 const int BITS_QSIDE_CASTLE = 64;
 
-const std::unordered_map<color, std::vector<int>> PAWN_OFFSETS = {
-    {color::b, {16, 32, 17, 15}}, // Black pawn offsets
-    {color::w, {-16, -32, -17, -15}} // White pawn offsets
-};
-
-const std::unordered_map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
-    {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
-    {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
-    {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
-    {QUEEN, {-17, -16, -15, 1, 17, 16, 15, -1}},   // Queen offsets
-    {KING, {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
-};
 const std::vector<int> ATTACKS = {
   20, 0, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0, 0,20, 0,
    0,20, 0, 0, 0, 0, 0, 24,  0, 0, 0, 0, 0,20, 0, 0,
@@ -111,15 +99,6 @@ const std::vector<int> RAYS = {
   -15,  0,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,  0,-17
 };
 
-const std::unordered_map<pieceSymbol, int> PIECE_MASKS = {
-    {pieceSymbol::p, 0x1},
-    {pieceSymbol::n, 0x2},
-    {pieceSymbol::b, 0x4},
-    {pieceSymbol::r, 0x8},
-    {pieceSymbol::q, 0x10},
-    {pieceSymbol::k, 0x20}
-};
-
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 
 const std::array<pieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
@@ -134,17 +113,6 @@ struct RookPosition {
     int flag;
 };
 
-const std::unordered_map<color, std::vector<RookPosition>> ROOKS = {
-    {color::w, {
-        {112, BITS_QSIDE_CASTLE},
-        {119, BITS_KSIDE_CASTLE}
-    }},
-    {color::b, {
-        {0, BITS_QSIDE_CASTLE},
-        {7, BITS_KSIDE_CASTLE}
-    }}
-};
-
 const int RANK_1 = 7;
 const int RANK_2 = 6;
 
@@ -152,9 +120,5 @@ const int RANK_7 = 1;
 const int RANK_8 = 0;
 
 const std::vector<std::string> TERMINATION_MARKERS = { "1-0", "0-1", "1/2-1/2", "*" };
-
-const std::unordered_map<color, int> SECOND_RANK = {
-    {color::w, RANK_2}, {color::b, RANK_7}
-};
 
 #endif

@@ -1,13 +1,15 @@
 #pragma once
 #include "privImpls.h"
 
+using namespace privs;
+
 class Chess::chrImpl {
 private:
 	Chess& ch;
 public:
-	chrImpl(Chess& c) : ch(c) { _board.fill(piece({ color::NO_COLOR, PNONE })); }
+	chrImpl(Chess& c) : ch(c) { _board = std::vector<piece>(128, piece()); }
 
-	std::array<piece, 128> _board;
+	std::vector<piece> _board;
 	color _turn = WHITE;
 	std::unordered_map<std::string, std::string> _header;
 	std::map<color, int> _kings = { { WHITE, -1 }, { BLACK, -1 } };
@@ -28,11 +30,45 @@ public:
 
 	void _updateEnPassantSquare();
 
-	bool _attacked(color c, int sq);
+	inline bool _attacked(color c, int sq) {
+		for (int i = 0; i <= squareTo0x88(square::h1); i++) {
+			if (i & 0x88) { i += 7; continue; }
+			piece currentSq = _board[i];
+			if (!currentSq || currentSq.color != c) continue;
+			const int diff = i - sq;
 
-	bool _isKingAttacked(color c);
+			if (diff == 0) continue;
 
-	std::vector<internalMove> _moves(bool legal = true, char p = 0, std::string sq = std::string());
+			const int index = diff + 119;
+			if (ATTACKS[index] & getPieceMasks(currentSq.type)) {
+				if (currentSq.type == PAWN) {
+					if (diff > 0) if (currentSq.color == WHITE) return true;
+					else { if (currentSq.color == BLACK) return true; }
+					continue;
+				}
+
+				if (currentSq.type == KNIGHT || currentSq.type == KING) return true;
+
+				const int offset = RAYS[index];
+				int j = i + offset;
+
+				bool blocked = false;
+				while (j != sq) {
+					if (_board[j]) { blocked = true; break; }
+					j += offset;
+				}
+				if (!blocked) return true;
+			}
+		}
+		return false;
+	}
+
+	inline bool _isKingAttacked(color c) {
+		const int sq = this->_kings[c];
+		return sq == -1 ? false : _attacked(swapColor(c), sq);
+	}
+
+	std::vector<internalMove> _moves(bool legal = true, pieceSymbol p = PNONE, std::string sq = std::string());
 
 	void _push(internalMove move);
 

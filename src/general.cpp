@@ -2,6 +2,8 @@
 
 // Contains function definitions for general functions (except cmove for moving, it's in the moveHandling file)
 
+using namespace privs;
+
 void Chess::reset() {
 	load(DEFAULT_POSITION);
 }
