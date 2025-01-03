@@ -188,16 +188,6 @@ public:
 	// Returns the current move number, in full moves.
 	int moveNumber();
 
-	std::string getComment();
-
-	std::string deleteComment();
-
-	std::string setComment(const std::string& comment);
-
-	std::vector<std::pair<std::string, std::string>> getComments();
-
-	std::vector<std::pair<std::string, std::string>> deleteComments();
-
 	bool setCastlingRights(const color& c, std::pair<pieceSymbol, bool> rights);
 
 	~Chess();

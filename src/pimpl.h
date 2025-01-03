@@ -87,6 +87,4 @@ public:
 	void _incPositionCount(std::string fen);
 
 	void _decPositionCount(std::string fen);
-
-	void _pruneComments();
 };

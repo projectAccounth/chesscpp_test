@@ -106,7 +106,7 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 	const square startsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 	const square currentsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 
-	const std::array<int, 2> attackers = { static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1 };
+	const std::vector<int> attackers = { static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1 };
 
 	const piece stsq = _board[static_cast<int>(startsquare)];
 	const piece epsq = _board[_epSquare];
@@ -557,30 +557,5 @@ move Chess::chrImpl::_makePretty(internalMove uglyMove) {
 		m.lan += pieceToChar(promotion);
 	}
 	return m;
-}
-
-void Chess::chrImpl::_pruneComments() {
-	std::vector<internalMove> reservedHistory = {};
-	std::map<std::string, std::string> currentComments = {};
-
-	const auto copyComment = [&](std::string fen) -> void {
-		if (_comments.count(fen) > 0) {
-			currentComments.at(fen) = _comments.at(fen);
-		}
-		};
-
-	while (_history.size() > 0) {
-		reservedHistory.push_back(_undoMove());
-	}
-
-	copyComment(ch.fen());
-
-	while (true) {
-		internalMove m = reservedHistory.back();
-		if (!m) break;
-		_makeMove(m);
-		copyComment(ch.fen());
-	}
-	_comments = currentComments;
 }
 

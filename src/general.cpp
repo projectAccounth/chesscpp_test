@@ -593,17 +593,3 @@ std::vector<std::tuple<std::string, move>> Chess::history(bool verbose) {
 
 	return moveHistory;
 }
-
-std::string Chess::getComment() {
-	return chImpl->_comments.at(fen());
-}
-
-std::string Chess::deleteComment() {
-	const std::string comment = chImpl->_comments.at(fen());
-	chImpl->_comments.erase(fen());
-	return comment;
-}
-
-//std::vector<std::pair<std::string, std::string>> Chess::getComments() {
-//	chImpl->_pruneComments();
-//}
