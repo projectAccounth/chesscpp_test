@@ -122,6 +122,10 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	return join(result, "");
 }
 
+std::vector<std::optional<pieceSymbol>> Chess::getAttackingPieces(color c, square sq) {
+	return chImpl->_getAttackingPiece(c, squareTo0x88(sq));
+}
+
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 	auto mask = [&](std::string str) -> std::string {
 		return std::regex_replace(str, std::regex(R"(\\)"), R"(\)");

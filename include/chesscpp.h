@@ -185,6 +185,8 @@ public:
 	// Returns the current move number, in full moves.
 	int moveNumber();
 
+	std::vector<std::optional<pieceSymbol>> getAttackingPieces(color c, square sq);
+
 	std::string getComment();
 
 	std::string deleteComment();

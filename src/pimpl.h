@@ -30,6 +30,8 @@ public:
 
 	bool _attacked(color c, int sq);
 
+	std::vector<std::optional<pieceSymbol>> _getAttackingPiece(color c, int sq);
+
 	bool _isKingAttacked(color c);
 
 	std::vector<internalMove> _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<std::string> sq = std::nullopt);

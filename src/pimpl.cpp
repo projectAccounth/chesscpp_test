@@ -98,6 +98,53 @@ void Chess::chrImpl::_updateEnPassantSquare() {
 	}
 }
 
+std::vector<std::optional<pieceSymbol>> Chess::chrImpl::_getAttackingPiece(color c, int sq) {
+	std::vector<std::optional<pieceSymbol>> pieces;
+	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+		if (i & 0x88) {
+			i += 7;
+			continue;
+		}
+		std::optional<piece> currentSq = _board[i];
+		if (!currentSq.has_value() || currentSq.value().color != c)
+			continue;
+		const piece p = currentSq.value();
+		const int diff = i - static_cast<int>(sq);
+
+		if (diff == 0) continue;
+
+		const int index = diff + 119;
+		if (ATTACKS[index] & PIECE_MASKS.at(p.type)) {
+			if (p.type == PAWN) {
+				if (diff > 0) {
+					if (p.color == WHITE) pieces.push_back(p.type);
+				}
+				else {
+					if (p.color == BLACK) pieces.push_back(p.type);
+				}
+				continue;
+			}
+
+			if (p.type == pieceSymbol::n || p.type == pieceSymbol::k) pieces.push_back(p.type);
+
+			const int offset = RAYS[index];
+			int j = i + offset;
+
+			bool blocked = false;
+			while (j != static_cast<int>(sq)) {
+				std::optional<piece> pos = _board[j];
+				if (pos.has_value()) {
+					blocked = true;
+					break;
+				}
+				j += offset;
+			}
+			if (!blocked) pieces.push_back(p.type);
+		}
+	}
+	return pieces;
+}
+
 bool Chess::chrImpl::_attacked(color c, int sq) {
 	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
 		if (i & 0x88) {
