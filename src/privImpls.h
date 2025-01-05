@@ -99,8 +99,10 @@ namespace privs {
 		case KNIGHT: return { -18, -33, -31, -14, 18, 33, 31, 14 };
 		case BISHOP: return { -17, -15, 17, 15 };
 		case ROOK: return { -16, 1, 16, -1 };
-		case QUEEN: return { -17, -16, -15, 1, 17, 16, 15, -1 };
+
+		case QUEEN:
 		case KING: return { -17, -16, -15, 1, 17, 16, 15, -1 };
+
 		case PAWN: break;
 		case PNONE: break;
 		}

@@ -157,12 +157,12 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	}
 
 	const int moveNumber = std::stoi(tokens[5]);
-	if (std::isnan(moveNumber) || moveNumber <= 0) {
+	if (std::isnan(static_cast<double>(moveNumber)) || moveNumber <= 0) {
 		return { false, "Invalid FEN" };
 	}
 
 	const int halfMoves = std::stoi(tokens[4]);
-	if (std::isnan(halfMoves) || halfMoves < 0) {
+	if (std::isnan(static_cast<double>(halfMoves)) || halfMoves < 0) {
 		return { false, "Invalid FEN" };
 	}
 

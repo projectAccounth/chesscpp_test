@@ -100,19 +100,24 @@ void Chess::chrImpl::_updateCastlingRights() {
 	}
 }
 
+
+
 void Chess::chrImpl::_updateEnPassantSquare() {
 	if (_epSquare == -1) return;
 
 	const square startsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 	const square currentsquare = static_cast<square>(_epSquare + (_turn == WHITE ? -16 : 16));
 
-	const std::vector<int> attackers = { static_cast<int>(currentsquare) + 1, static_cast<int>(currentsquare) - 1 };
+	const int strsq = static_cast<int>(startsquare);
+	const int crsq = static_cast<int>(currentsquare);
 
-	const piece stsq = _board[static_cast<int>(startsquare)];
+	const std::vector<int> attackers = { crsq + 1, crsq - 1 };
+
+	const piece stsq = _board[strsq];
 	const piece epsq = _board[_epSquare];
 	if (stsq || epsq ||
-		_board[static_cast<int>(currentsquare)].color != swapColor(_turn) ||
-		_board[static_cast<int>(currentsquare)].type != PAWN) {
+		_board[crsq].color != swapColor(_turn) ||
+		_board[crsq].type != PAWN) {
 		_epSquare = -1;
 		return;
 	}
@@ -162,8 +167,8 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 			to = from + getPawnOffsets(us)[0];
 			if (!_board[to]) {
 				addMove(moves, us, from, to, PAWN);
-
 				to = from + getPawnOffsets(us)[1];
+
 				if (getSecondRank(us) == rank(from) && !_board[to]) addMove(moves, us, from, to, PAWN, PNONE, BITS_BIG_PAWN);
 			}
 
@@ -178,12 +183,11 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 		}
 		if (forPiece != PNONE && forPiece != type) continue;
 
-		for (int j = 0; j < static_cast<int>(getPieceOffsets(type).size()); j++) {
-			const int offset = getPieceOffsets(type)[j];
+		for (size_t j = 0; j < getPieceOffsets(type).size(); j++) {
 			to = from;
 
 			while (true) {
-				to += offset;
+				to += getPieceOffsets(type)[j];
 				if (to & 0x88) break;
 
 				if (!_board[to]) addMove(moves, us, from, to, type);
@@ -203,27 +207,27 @@ std::vector<internalMove> Chess::chrImpl::_moves(bool legal, pieceSymbol p, std:
 			if (_castling[us] & BITS_KSIDE_CASTLE) {
 				const int castlingFrom = _kings[us];
 				const int castlingTo = castlingFrom + 2;
-				const bool kSideCastle =
+				const bool canCastleKSide =
 					!_board[castlingFrom + 1] &&
 					!_board[castlingTo] &&
 					!_attacked(them, _kings[(us)]) &&
 					!_attacked(them, castlingFrom + 1) &&
 					!_attacked(them, castlingTo);
-				if (kSideCastle)
+				if (canCastleKSide)
 					addMove(moves, us, _kings[us], castlingTo, KING, PNONE, BITS_KSIDE_CASTLE);
 			}
 
 			if (_castling[us] & BITS_QSIDE_CASTLE) {
 				const int castlingFrom = _kings[us];
 				const int castlingTo = castlingFrom - 2;
-				const bool qSideCastle =
+				const bool canCastleQSide =
 					!_board[castlingFrom - 1] &&
 					!_board[castlingFrom - 2] &&
 					!_board[castlingFrom - 3] &&
 					!_attacked(them, _kings[us]) &&
 					!_attacked(them, castlingFrom - 1) &&
 					!_attacked(them, castlingTo);
-				if (qSideCastle)
+				if (canCastleQSide)
 					addMove(moves, us, _kings[us], castlingTo, KING, PNONE, BITS_QSIDE_CASTLE);
 			}
 		}
@@ -260,10 +264,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 			output += std::string(1, static_cast<char>(std::toupper(pieceToChar(m.piece)))) + disambiguator;
 		}
 		if (m.flags & (BITS_CAPTURE | BITS_EP_CAPTURE)) {
-			if (m.piece == PAWN) {
-				output += squareToString(algebraic(m.from))[0];
-			}
-			output += 'x';
+			output += (m.piece == PAWN ? std::string(1, squareToString(algebraic(m.from))[0]) : "") + 'x';
 		}
 
 		output += squareToString(algebraic(m.to));
@@ -275,14 +276,7 @@ std::string Chess::chrImpl::_moveToSan(internalMove m, std::vector<internalMove>
 
 	_makeMove(m);
 
-	if (ch.isCheck()) {
-		if (ch.isCheckmate()) {
-			output += '#';
-		}
-		else {
-			output += '+';
-		}
-	}
+	if (ch.isCheck()) output += ch.isCheckmate() ? '#' : '+';
 	_undoMove();
 
 	return output;
@@ -392,8 +386,8 @@ internalMove Chess::chrImpl::_undoMove() {
 		else _board[m.to] = { them, m.captured };
 	}
 	if (m.flags & (BITS_KSIDE_CASTLE | BITS_QSIDE_CASTLE)) {
-		int castlingTo = m.flags & BITS_KSIDE_CASTLE ? m.to + 1 : m.to - 2;
-		int castlingFrom = m.flags & BITS_KSIDE_CASTLE ? m.to - 1 : m.to + 1;
+		int castlingTo = (m.flags & BITS_KSIDE_CASTLE) ? m.to + 1 : m.to - 2;
+		int castlingFrom = (m.flags & BITS_KSIDE_CASTLE) ? m.to - 1 : m.to + 1;
 
 		_board[castlingTo] = _board[castlingFrom];
 		_board[castlingFrom] = piece();
