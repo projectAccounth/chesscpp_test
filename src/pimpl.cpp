@@ -663,7 +663,7 @@ std::optional<internalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 
 int Chess::chrImpl::_getPositionCount(std::string fen) {
 	std::string trimmedFen = trimFen(fen);
-	return _positionCount.at(trimmedFen).has_value() ? _positionCount.at(trimmedFen).value() : 0;
+	return _positionCount.count(trimmedFen) > 0 ? _positionCount.at(trimmedFen).value() : 0;
 }
 
 void Chess::chrImpl::_incPositionCount(std::string fen) {

@@ -309,10 +309,10 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 }
 
 std::string Chess::ascii(bool isWhitePersp) {
-	std::string s = "   +------------------------+\n";
+	std::string s = "   +---+---+---+---+---+---+---+---+\n";
 
-	int start = isWhitePersp ? squareTo0x88(square::a8) : squareTo0x88(square::a1);
-	int end = isWhitePersp ? squareTo0x88(square::h1) : squareTo0x88(square::h8);
+	int start = isWhitePersp ? 0 : 7;
+	int end = isWhitePersp ? 119 : 112;
 	int step = isWhitePersp ? 1 : -1;
 
 	for (int i = start; (isWhitePersp ? i <= end : i >= end); i += step) {
@@ -324,7 +324,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 		if (chImpl->_board[i]) {
 			pieceSymbol p = chImpl->_board[i].value().type;
 			color c = chImpl->_board[i].value().color;
-			char symbol = c == WHITE ? std::toupper(pieceToChar(p)) : std::tolower(pieceToChar(p));
+			char symbol = c == WHITE ? static_cast<char>(std::toupper(pieceToChar(p))) : static_cast<char>(std::tolower(pieceToChar(p)));
 			s += " " + std::string(1, symbol) + " ";
 		}
 		else {
@@ -333,18 +333,22 @@ std::string Chess::ascii(bool isWhitePersp) {
 
 		if ((i + step) & 0x88) {
 			s += "|\n";
+			s += "   +---+---+---+---+---+---+---+---+\n";
 			i += (isWhitePersp ? 8 : -8);
+		}
+		else {
+			s += "|";
 		}
 	}
 
-	s += "   +------------------------+\n";
+	// s += "   +---+---+---+---+---+---+---+---+\n";
 	s += "     ";
 
 	if (isWhitePersp) {
-		s += "a  b  c  d  e  f  g  h";
+		s += "a   b   c   d   e   f   g   h";
 	}
 	else {
-		s += "h  g  f  e  d  c  b  a";
+		s += "h   g   f   e   d   c   b   a";
 	}
 
 	return s;
