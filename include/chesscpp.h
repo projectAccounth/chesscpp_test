@@ -187,6 +187,8 @@ public:
 
 	std::vector<std::optional<pieceSymbol>> getAttackingPieces(color c, square sq);
 
+
+
 	std::string getComment();
 
 	std::string deleteComment();

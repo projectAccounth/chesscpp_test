@@ -15,7 +15,7 @@ char pieceToChar(const pieceSymbol& p) {
 	switch (p) {
 	case PAWN: return 'p';
 	case KNIGHT: return 'n';
-	case BISHOP: return 'p';
+	case BISHOP: return 'b';
 	case ROOK: return 'r';
 	case QUEEN: return 'q';
 	case KING: return 'k';

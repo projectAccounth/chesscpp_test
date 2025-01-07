@@ -14,12 +14,15 @@ int main() {
 		system("cls");
 		std::cout << game.ascii() << '\n';
 		auto moves = game.moves();
-		std::uniform_int_distribution<int> d(1, moves.size());
-		game.cmove(moves[d(rnd)], false);
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::uniform_int_distribution<int> d(0, moves.size() - 1);
+		auto pickedMove = moves[d(rnd)];
+		game.cmove(pickedMove);
 		system("cls");
 		std::cout << game.ascii() << '\n';
 	}
+
+	std::cout << game.pgn() << '\n';
+	system("pause");
 
 	return 0;
 }
