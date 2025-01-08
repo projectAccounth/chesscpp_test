@@ -7,7 +7,7 @@
 #include <array>
 #include <vector>
 
-enum class square : int {
+enum class Square : int {
     a8 = 0, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -21,7 +21,7 @@ enum class square : int {
 enum class pieceSymbol : int {
     p, n, b, r, q, k, NO_PIECE = -10
 };
-enum class color {
+enum class Color {
     w, b, NO_COLOR = -10
 };
 
@@ -49,12 +49,12 @@ const std::array<std::string, 64> SQUARES = {
 #define PNONE pieceSymbol::NO_PIECE
 
 // Notation for white piece
-#define WHITE color::w
+#define WHITE Color::w
 // Notation for black piece
-#define BLACK color::b
+#define BLACK Color::b
 
 struct piece {
-    color color = color::NO_COLOR;
+    Color color = Color::NO_COLOR;
     pieceSymbol type = PNONE;
 
     explicit operator bool() const;
@@ -63,9 +63,9 @@ struct piece {
 typedef struct internalMove internalMove;
 
 typedef struct move {
-    color color = color::NO_COLOR;
-    square from = square::NO_SQUARE;
-    square to = square::NO_SQUARE;
+    Color color = Color::NO_COLOR;
+    Square from = Square::NO_SQUARE;
+    Square to = Square::NO_SQUARE;
     pieceSymbol piece = PNONE;
     pieceSymbol captured = PNONE;
     pieceSymbol promotion = PNONE;

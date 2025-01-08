@@ -1,5 +1,7 @@
 #include "privImpls.h"
 
+using namespace privs;
+
 std::string trim(const std::string& str) {
 	auto start = std::find_if_not(str.begin(), str.end(), [](unsigned char ch) {
 		return std::isspace(ch);
@@ -11,7 +13,7 @@ std::string trim(const std::string& str) {
 	return (start < end ? std::string(start, end) : std::string());
 }
 
-bool operator<(square lhs, square rhs) {
+bool operator<(Square lhs, Square rhs) {
 	return static_cast<int>(lhs) < static_cast<int>(rhs);
 }
 
@@ -59,25 +61,25 @@ int file(int square) {
 	return square & 0xf;
 }
 
-square stringToSquare(const std::string& squareStr) {
-	return static_cast<square>(('8' - squareStr[1]) * 8 + (squareStr[0] - 'a'));
+Square stringToSquare(const std::string& squareStr) {
+	return static_cast<Square>(('8' - squareStr[1]) * 8 + (squareStr[0] - 'a'));
 }
 
-std::string squareToString(square sq) {
+std::string squareToString(Square sq) {
 	return SQUARES[static_cast<unsigned int>(sq)];
 }
 
-square algebraic(int square) {
+Square algebraic(int square) {
 	return stringToSquare(std::string(1, static_cast<char>(std::string("abcdefgh").at(file(square)))) + std::string(1, static_cast<char>(std::string("87654321").at(rank(square)))));
 }
 
-color swapColor(color color) {
+Color swapColor(Color color) {
 	return color == WHITE ? BLACK : WHITE;
 }
 
 std::string getDisambiguator(internalMove move, std::vector<internalMove> moves) {
-	const square from = algebraic(move.from);
-	const square to = algebraic(move.to);
+	const Square from = algebraic(move.from);
+	const Square to = algebraic(move.to);
 	const pieceSymbol p = move.piece;
 
 	int ambiguities = 0;
@@ -85,18 +87,18 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	int sameFile = 0;
 
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
-		const square ambigFrom = algebraic(moves[i].from);
-		const square ambigTo = algebraic(moves[i].to);
+		const Square ambigFrom = algebraic(moves[i].from);
+		const Square ambigTo = algebraic(moves[i].to);
 		const pieceSymbol ambigPiece = moves[i].piece;
 
 		if (!(p == ambigPiece && from != ambigFrom && to == ambigTo)) continue;
 
 		ambiguities++;
 
-		if (rank(privs::squareTo0x88(from)) == rank(privs::squareTo0x88(ambigFrom))) {
+		if (rank(squareTo0x88(from)) == rank(squareTo0x88(ambigFrom))) {
 			sameRank++;
 		}
-		if (file(privs::squareTo0x88(from)) == file(privs::squareTo0x88(ambigFrom))) {
+		if (file(squareTo0x88(from)) == file(squareTo0x88(ambigFrom))) {
 			sameFile++;
 		}
 	}
@@ -113,7 +115,7 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	}
 }
 
-void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, pieceSymbol captured, int flags) {
+void addMove(std::vector<internalMove>& moves, Color color, int from, int to, pieceSymbol p, pieceSymbol captured, int flags) {
 	const int r = rank(to);
 	if (p == PAWN && (r == RANK_1 || r == RANK_8)) {
 		for (int i = 0; i < static_cast<int>(PROMOTIONS.size()); i++) {

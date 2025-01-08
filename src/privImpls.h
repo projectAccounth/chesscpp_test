@@ -16,7 +16,7 @@
 
 std::string trim(const std::string& str);
 
-bool operator<(square lhs, square rhs);
+bool operator<(Square lhs, Square rhs);
 
 std::vector<std::string> split(const std::string& str, char delimiter);
 
@@ -26,11 +26,11 @@ std::string join(const std::vector<std::string>& elements, const std::string& de
 
 bool isDigit(std::string c);
 
-color swapColor(color color);
+Color swapColor(Color color);
 
 std::string getDisambiguator(internalMove move, std::vector<internalMove> moves);
 
-void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, pieceSymbol captured = PNONE, int flags = BITS_NORMAL);
+void addMove(std::vector<internalMove>& moves, Color color, int from, int to, pieceSymbol p, pieceSymbol captured = PNONE, int flags = BITS_NORMAL);
 
 std::string replaceSubstring(const std::string& str, const std::string& from, const std::string& to);
 
@@ -42,20 +42,20 @@ std::string trimFen(std::string fen);
 
 namespace privs {
 
-	static inline std::vector<RookPosition> getRookInf(const color& c) {
+	static inline std::vector<RookPosition> getRookInf(const Color& c) {
 		switch (c) {
 		case BLACK: return { { 0, BITS_QSIDE_CASTLE }, { 7, BITS_KSIDE_CASTLE } };
 		case WHITE: return { { 112, BITS_QSIDE_CASTLE }, { 119, BITS_KSIDE_CASTLE } };
-		case color::NO_COLOR: break;
+		case Color::NO_COLOR: break;
 		}
 		throw std::invalid_argument("Invalid piece (at getRookInf)");
 	}
 
-	static inline int getSecondRank(const color& c) {
+	static inline int getSecondRank(const Color& c) {
 		switch (c) {
 		case BLACK: return RANK_7;
 		case WHITE: return RANK_2;
-		case color::NO_COLOR: break;
+		case Color::NO_COLOR: break;
 		}
 		throw std::invalid_argument("Invalid piece (at getSecondRank)");
 	}
@@ -85,7 +85,7 @@ namespace privs {
 		switch (p) {
 		case PAWN: return 'p';
 		case KNIGHT: return 'n';
-		case BISHOP: return 'p';
+		case BISHOP: return 'b';
 		case ROOK: return 'r';
 		case QUEEN: return 'q';
 		case KING: return 'k';
@@ -122,16 +122,16 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (at getPieceMasks)");
 	}
 
-	static inline std::vector<int> getPawnOffsets(const color& c) {
+	static inline std::vector<int> getPawnOffsets(const Color& c) {
 		switch (c) {
 		case BLACK: return { 16, 32, 17, 15 };
 		case WHITE: return { -16, -32, -17, -15 };
-		case color::NO_COLOR: break;
+		case Color::NO_COLOR: break;
 		}
 		throw std::invalid_argument("Invalid piece (at getPawnOffsets)");
 	}
 
-	static inline bool isValid8x8(const square& sq) {
+	static inline bool isValid8x8(const Square& sq) {
 		return static_cast<int>(sq) >= 0 && static_cast<int>(sq) < 64;
 	}
 
@@ -139,7 +139,7 @@ namespace privs {
 		return (sq & 0x88) == 0;
 	}
 
-	static inline int squareTo0x88(const square& sq) {
+	static inline int squareTo0x88(const Square& sq) {
 		return (static_cast<int>(sq) >> 3 << 4) | (static_cast<int>(sq) & 7);
 	}
 

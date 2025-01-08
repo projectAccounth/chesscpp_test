@@ -9,7 +9,7 @@ void Chess::reset() {
 }
 
 piece::operator bool() const {
-	return !(type == PNONE && color == color::NO_COLOR);
+	return !(type == PNONE && color == Color::NO_COLOR);
 }
 
 std::string Chess::pgn(char newline, int maxWidth) {
@@ -50,11 +50,11 @@ std::string Chess::pgn(char newline, int maxWidth) {
 
 		if (!m) break;
 
-		if (chImpl->_history.size() == 0 && m.color == color::b) {
+		if (chImpl->_history.size() == 0 && m.color == Color::b) {
 			const std::string prefix = std::to_string(chImpl->_moveNumber) + ". ...";
 			moveString = !moveString.empty() ? moveString + " " + prefix : prefix;
 		}
-		else if (m.color == color::w) {
+		else if (m.color == Color::w) {
 			if (!moveString.empty()) {
 				moves.push_back(moveString);
 			}
@@ -311,10 +311,10 @@ void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
 }
 
 std::string Chess::ascii(bool isWhitePersp) {
-	std::string s = "   +------------------------+\n";
+	std::string s = "   +---+---+---+---+---+---+---+---+\n";
 
-	int start = isWhitePersp ? squareTo0x88(square::a8) : squareTo0x88(square::a1);
-	int end = isWhitePersp ? squareTo0x88(square::h1) : squareTo0x88(square::h8);
+	int start = isWhitePersp ? 0 : 7;
+	int end = isWhitePersp ? 119 : 112;
 	int step = isWhitePersp ? 1 : -1;
 
 	for (int i = start; (isWhitePersp ? i <= end : i >= end); i += step) {
@@ -325,7 +325,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 
 		if (chImpl->_board[i]) {
 			pieceSymbol p = chImpl->_board[i].type;
-			color c = chImpl->_board[i].color;
+			Color c = chImpl->_board[i].color;
 			char symbol = c == WHITE ? static_cast<char>(std::toupper(pieceToChar(p))) : static_cast<char>(std::tolower(pieceToChar(p)));
 			s += " " + std::string(1, symbol) + " ";
 		}
@@ -335,18 +335,22 @@ std::string Chess::ascii(bool isWhitePersp) {
 
 		if ((i + step) & 0x88) {
 			s += "|\n";
+			s += "   +---+---+---+---+---+---+---+---+\n";
 			i += (isWhitePersp ? 8 : -8);
+		}
+		else {
+			s += "|";
 		}
 	}
 
-	s += "   +------------------------+\n";
+	// s += "   +---+---+---+---+---+---+---+---+\n";
 	s += "     ";
 
 	if (isWhitePersp) {
-		s += "a  b  c  d  e  f  g  h";
+		s += "a   b   c   d   e   f   g   h";
 	}
 	else {
-		s += "h  g  f  e  d  c  b  a";
+		s += "h   g   f   e   d   c   b   a";
 	}
 
 	return s;
@@ -356,13 +360,13 @@ std::string Chess::fen() {
 	int empty = 0;
 	std::string fen = "";
 
-	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
 		if (chImpl->_board[i].type != PNONE) {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 				empty = 0;
 			}
-			color c = chImpl->_board[i].color;
+			Color c = chImpl->_board[i].color;
 			pieceSymbol type = chImpl->_board[i].type;
 
 			fen += (c == WHITE) ? static_cast<char>(std::toupper(pieceToChar(type))) : static_cast<char>(std::tolower(pieceToChar(type)));
@@ -375,7 +379,7 @@ std::string Chess::fen() {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 			}
-			if (i != squareTo0x88(square::h1)) {
+			if (i != squareTo0x88(Square::h1)) {
 				fen += '/';
 			}
 
@@ -403,13 +407,13 @@ std::string Chess::fen() {
 	std::string epSquare = "-";
 
 	if (chImpl->_epSquare != -1) {
-		square bigPawnSquare = static_cast<square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
+		Square bigPawnSquare = static_cast<Square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
 		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
 		for (auto& sq : squares) {
 			if (sq & 0x88) {
 				continue;
 			}
-			color ct = chImpl->_turn;
+			Color ct = chImpl->_turn;
 			piece p = chImpl->_board[sq];
 			if (
 				p &&
@@ -482,7 +486,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 			squ += std::stoi(p);
 		}
 		else {
-			const color color = p[0] < 'a' ? WHITE : BLACK;
+			const Color color = p[0] < 'a' ? WHITE : BLACK;
 			try {
 				chImpl->_put(charToSymbol(static_cast<char>(std::tolower(p[0]))), color, algebraic(squ));
 			}

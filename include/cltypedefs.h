@@ -21,10 +21,10 @@
 #include "exptypes.h"
 
 // Empty square
-#define EMPTY square::NO_SQUARE
+#define EMPTY Square::NO_SQUARE
 
 typedef struct internalMove {
-    color color = color::NO_COLOR;
+    Color color = Color::NO_COLOR;
     int from = -1;
     int to = -1;
     pieceSymbol piece = PNONE;
@@ -38,9 +38,9 @@ typedef struct internalMove {
 class History {
 public:
     internalMove move = internalMove();
-    std::map<color, int> kings = std::map<color, int>();
-    color turn = color::NO_COLOR;
-    std::map<color, int> castling = std::map<color, int>();
+    std::map<Color, int> kings = std::map<Color, int>();
+    Color turn = Color::NO_COLOR;
+    std::map<Color, int> castling = std::map<Color, int>();
     int epSquare = -1;
     int halfMoves = 0;
     int moveNumber = 0;
@@ -98,6 +98,17 @@ const std::vector<int> RAYS = {
     0,-15,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,-17,  0, 0,
   -15,  0,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,  0,-17
 };
+//
+//const std::unordered_map<square, int> Ox88 = {
+//    {Square::a8, 0}, {Square::b8, 1}, {Square::c8, 2}, {Square::d8, 3}, {Square::e8, 4}, {Square::f8, 5}, {Square::g8, 6}, {Square::h8, 7},
+//    {Square::a7, 16}, {Square::b7, 17}, {Square::c7, 18}, {Square::d7, 19}, {Square::e7, 20}, {Square::f7, 21}, {Square::g7, 22}, {Square::h7, 23},
+//    {Square::a6, 32}, {Square::b6, 33}, {Square::c6, 34}, {Square::d6, 35}, {Square::e6, 36}, {Square::f6, 37}, {Square::g6, 38}, {Square::h6, 39},
+//    {Square::a5, 48}, {Square::b5, 49}, {Square::c5, 50}, {Square::d5, 51}, {Square::e5, 52}, {Square::f5, 53}, {Square::g5, 54}, {Square::h5, 55},
+//    {Square::a4, 64}, {Square::b4, 65}, {Square::c4, 66}, {Square::d4, 67}, {Square::e4, 68}, {Square::f4, 69}, {Square::g4, 70}, {Square::h4, 71},
+//    {Square::a3, 80}, {Square::b3, 81}, {Square::c3, 82}, {Square::d3, 83}, {Square::e3, 84}, {Square::f3, 85}, {Square::g3, 86}, {Square::h3, 87},
+//    {Square::a2, 96}, {Square::b2, 97}, {Square::c2, 98}, {Square::d2, 99}, {Square::e2, 100}, {Square::f2, 101}, {Square::g2, 102}, {Square::h2, 103},
+//    {Square::a1, 112}, {Square::b1, 113}, {Square::c1, 114}, {Square::d1, 115}, {Square::e1, 116}, {Square::f1, 117}, {Square::g1, 118}, {Square::h1, 119}
+//};
 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 

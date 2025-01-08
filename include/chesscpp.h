@@ -31,13 +31,13 @@ int file(int square);
 int rank(int square);
 
 // Convert a string (algebraic notation) to a value of type square.
-square stringToSquare(const std::string& squareStr);
+Square stringToSquare(const std::string& squareStr);
 
 // Convert a square (the type) to a string.
-std::string squareToString(square sq);
+std::string squareToString(Square sq);
 
 // Convert a 0x88 square to algebraic notation.
-square algebraic(int square);
+Square algebraic(int square);
 
 class Chess {
 private:	
@@ -76,16 +76,16 @@ public:
 	/*
 	* Returns a piece on the specified square. Returns piece() if nothing is found.
 	*/
-	piece get(square sq);
+	piece get(Square sq);
 
 	// Puts a piece of a type on the specified square with the specified color.
-	bool put(pieceSymbol type, color c, square sq);
+	bool put(pieceSymbol type, Color c, Square sq);
 
 	// Removes a piece from a square. Returns std::nullopt if no pieces were removed.
-	piece remove(square sq);
+	piece remove(Square sq);
 
 	// Checks whether the king is attacked by the other side.
-	bool isAttacked(square sq, color attackedBy);
+	bool isAttacked(Square sq, Color attackedBy);
 
 	// Returns a value that indiciates whether the position is in check for the current side.
 	bool isCheck();
@@ -165,13 +165,13 @@ public:
 	int perft(int depth);
 
 	// Returns the current turn, Black or White.
-	color turn();
+	Color turn();
 
 	// Returns the current board. Useful for analysis.
-	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> board();
+	std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> board();
 
 	// Returns the current square color of the specified square. Either "light" or "dark" or an empty string (if square is invalid) is returned.
-	std::string squareColor(square sq);
+	std::string squareColor(Square sq);
 
 	// Returns the history of the board, in the form of a string array.
 	std::vector<std::string> historys();
@@ -183,12 +183,12 @@ public:
 	std::vector<move> historym();
 
 	// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
-	std::pair<bool, bool> getCastlingRights(color color);
+	std::pair<bool, bool> getCastlingRights(Color color);
 
 	// Returns the current move number, in full moves.
 	int moveNumber();
 
-	bool setCastlingRights(const color& c, std::pair<pieceSymbol, bool> rights);
+	bool setCastlingRights(const Color& c, std::pair<pieceSymbol, bool> rights);
 
 	~Chess();
 };

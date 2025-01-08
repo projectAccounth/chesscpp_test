@@ -4,11 +4,11 @@
 
 using namespace privs;
 
-color Chess::turn() {
+Color Chess::turn() {
 	return chImpl->_turn;
 }
 
-piece Chess::remove(square sq) {
+piece Chess::remove(Square sq) {
 	piece p = get(sq);
 	chImpl->_board[squareTo0x88(sq)] = piece();
 	if (p && p.type == KING) {
@@ -35,7 +35,7 @@ move Chess::undo() {
 	return move();
 }
 
-std::string Chess::squareColor(square sq) {
+std::string Chess::squareColor(Square sq) {
 	if (isValid8x8(sq)) {
 		int squ = squareTo0x88(sq);
 		return (rank(squ) + file(squ)) % 2 == 0 ? "light" : "dark";
@@ -43,7 +43,7 @@ std::string Chess::squareColor(square sq) {
 	return "";
 }
 
-piece Chess::get(square sq) {
+piece Chess::get(Square sq) {
 	int sqi = static_cast<int>(sq);
 	return chImpl->_board[sqi] ? chImpl->_board[sqi] : piece();
 }
@@ -99,7 +99,7 @@ move Chess::cmove(const moveOption& moveArg) {
 int Chess::perft(int depth) {
 	const std::vector<internalMove> moves = chImpl->_moves(false);
 	int nodes = 0;
-	color us = chImpl->_turn;
+	Color us = chImpl->_turn;
 
 	if (depth == 0) return 1;
 
@@ -111,7 +111,7 @@ int Chess::perft(int depth) {
 	return nodes;
 }
 
-std::pair<bool, bool> Chess::getCastlingRights(color c) {
+std::pair<bool, bool> Chess::getCastlingRights(Color c) {
 	return {
 		(chImpl->_castling[c] & getCastlingSide(KING)) != 0,
 		(chImpl->_castling[c] & getCastlingSide(QUEEN)) != 0
@@ -120,9 +120,9 @@ std::pair<bool, bool> Chess::getCastlingRights(color c) {
 
 void Chess::clear(bool preserveHeaders) {
 	chImpl->_board = std::vector<piece>(128, piece());
-	chImpl->_kings = { { color::w, -1 }, { color::b, -1 } };
+	chImpl->_kings = { { Color::w, -1 }, { Color::b, -1 } };
 	chImpl->_turn = WHITE;
-	chImpl->_castling = { {color::w, 0}, {color::b, 0} };
+	chImpl->_castling = { {Color::w, 0}, {Color::b, 0} };
 	chImpl->_epSquare = -1;
 	chImpl->_halfMoves = 0;
 	chImpl->_moveNumber = 1;
@@ -148,25 +148,25 @@ std::unordered_map<std::string, std::string> Chess::header(std::vector<std::stri
 	return chImpl->_header;
 }
 
-std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> Chess::board() {
-	std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> output = {};
-	std::vector<std::tuple<square, pieceSymbol, color>> row = {};
+std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> Chess::board() {
+	std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> output = {};
+	std::vector<std::tuple<Square, pieceSymbol, Color>> row = {};
 
-	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
 		if (!chImpl->_board[i]) {
-			row.push_back({ EMPTY, PNONE, color::NO_COLOR });
+			row.push_back({ EMPTY, PNONE, Color::NO_COLOR });
 		}
 		else {
-			row.push_back(std::tuple<square, pieceSymbol, color>{
+			row.push_back(std::tuple<Square, pieceSymbol, Color>{
 				algebraic(i),
 				chImpl->_board[i].type,
 				chImpl->_board[i].color
 			});
 		}
 		if ((i + 1) & 0x88) {
-			std::vector<std::tuple<square, pieceSymbol, color>> trow;
+			std::vector<std::tuple<Square, pieceSymbol, Color>> trow;
 			for (const auto& elem : row) {
-				bool hasValue = (std::get<square>(elem) != EMPTY && std::get<pieceSymbol>(elem) != PNONE && std::get<color>(elem) != color::NO_COLOR);
+				bool hasValue = (std::get<Square>(elem) != EMPTY && std::get<pieceSymbol>(elem) != PNONE && std::get<Color>(elem) != Color::NO_COLOR);
 				if (hasValue) {
 					trow.push_back(elem);
 				}
@@ -179,7 +179,7 @@ std::vector<std::vector<std::tuple<square, pieceSymbol, color>>> Chess::board() 
 	return output;
 }
 
-bool Chess::isAttacked(square sq, color attackedBy) {
+bool Chess::isAttacked(Square sq, Color attackedBy) {
 	return chImpl->_attacked(attackedBy, squareTo0x88(sq));
 }
 
@@ -206,7 +206,7 @@ bool Chess::inSufficientMaterial() {
 	std::vector<int> bishops = {};
 	int numPieces = 0;
 	int squareColor = 0;
-	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
 		squareColor = (squareColor + 1) % 2;
 		if (i & 0x88) {
 
@@ -249,7 +249,7 @@ bool Chess::isThreefoldRepetition() {
 	return chImpl->_getPositionCount(fen()) >= 3;
 }
 
-bool Chess::put(pieceSymbol type, color c, square sq) {
+bool Chess::put(pieceSymbol type, Color c, Square sq) {
 	if (chImpl->_put(type, c, sq)) {
 		chImpl->_updateCastlingRights();
 		chImpl->_updateEnPassantSquare();

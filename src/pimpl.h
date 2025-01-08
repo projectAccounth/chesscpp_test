@@ -10,45 +10,45 @@ public:
 	chrImpl(Chess& c) : ch(c) { _board = std::vector<piece>(128, piece()); }
 
 	std::vector<piece> _board;
-	color _turn = WHITE;
+	Color _turn = WHITE;
 	std::unordered_map<std::string, std::string> _header;
-	std::map<color, int> _kings = { { WHITE, -1 }, { BLACK, -1 } };
+	std::map<Color, int> _kings = { { WHITE, -1 }, { BLACK, -1 } };
 	int _epSquare = -1;
 	int _halfMoves = 0;
 	int _moveNumber = 0;
 	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
-	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
+	std::map<Color, int> _castling = { { Color::w, 0 }, { Color::b, 0 } };
 
 	std::map<std::string, int> _positionCount;
 
 	void _updateSetup(std::string fen);
 
-	bool _put(pieceSymbol type, color color, square sq);
+	bool _put(pieceSymbol type, Color color, Square sq);
 
 	void _updateCastlingRights();
 
 	void _updateEnPassantSquare();
 
-	inline bool _attacked(color c, int sq) {
-		for (int i = 0; i <= 119; i++) {
+	inline bool _attacked(Color c, int sq) {
+		for (int i = 0; i <= 0x77; i++) {
 			if (i & 0x88) { i += 7; continue; }
 			piece currentSq = _board[i];
 			if (!currentSq || currentSq.color != c) continue;
 			const int diff = i - sq;
 
 			if (diff == 0) continue;
-
-			if (ATTACKS[diff + 119] & getPieceMasks(currentSq.type)) {
+			const int index = diff + 0x77;
+			if (ATTACKS[index] & getPieceMasks(currentSq.type)) {
 				if (currentSq.type == PAWN) {
-					if (diff > 0) if (currentSq.color == WHITE) return true;
+					if (diff > 0) { if (currentSq.color == WHITE) return true; }
 					else { if (currentSq.color == BLACK) return true; }
 					continue;
 				}
 
 				if (currentSq.type == KNIGHT || currentSq.type == KING) return true;
 
-				const int offset = RAYS[diff + 119];
+				const int offset = RAYS[index];
 				int j = i + offset;
 
 				bool blocked = false;
@@ -62,7 +62,7 @@ public:
 		return false;
 	}
 
-	inline bool _isKingAttacked(color c) {
+	inline bool _isKingAttacked(Color c) {
 		const int sq = _kings[c];
 		return sq == -1 ? false : _attacked(swapColor(c), sq);
 	}
