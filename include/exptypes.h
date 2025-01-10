@@ -9,7 +9,7 @@
 #include <vector>
 #include <variant>
 
-enum class square : int {
+enum class Square : int {
     a8 = 0, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -19,10 +19,10 @@ enum class square : int {
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
 };
-enum class pieceSymbol : int {
+enum class PieceSymbol : int {
     p, n, b, r, q, k
 };
-enum class color {
+enum class Color {
     w, b
 };
 
@@ -41,32 +41,32 @@ const std::array<std::string, 64> SQUARES = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
 };
 
-#define PAWN pieceSymbol::p
-#define ROOK pieceSymbol::r
-#define KNIGHT pieceSymbol::n
-#define BISHOP pieceSymbol::b
-#define QUEEN pieceSymbol::q
-#define KING pieceSymbol::k
+#define PAWN PieceSymbol::p
+#define ROOK PieceSymbol::r
+#define KNIGHT PieceSymbol::n
+#define BISHOP PieceSymbol::b
+#define QUEEN PieceSymbol::q
+#define KING PieceSymbol::k
 
 // Notation for white piece
-#define WHITE color::w
+#define WHITE Color::w
 // Notation for black piece
-#define BLACK color::b
+#define BLACK Color::b
 
-struct piece {
-    color color;
-    pieceSymbol type;
+struct Piece {
+    Color color;
+    PieceSymbol type;
 };
 
-typedef struct internalMove internalMove;
+typedef struct InternalMove InternalMove;
 
 typedef struct move {
-    color color;
-    square from;
-    square to;
-    std::optional<pieceSymbol> piece;
-    std::optional<pieceSymbol> captured;
-    std::optional<pieceSymbol> promotion;
+    Color color;
+    Square from;
+    Square to;
+    std::optional<PieceSymbol> piece;
+    std::optional<PieceSymbol> captured;
+    std::optional<PieceSymbol> promotion;
     std::string flags;
     std::string san;
     std::string lan;

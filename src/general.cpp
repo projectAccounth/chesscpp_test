@@ -26,7 +26,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		}
 		return moveString;
 		};
-	std::vector<std::optional<internalMove>> reservedHistory;
+	std::vector<std::optional<InternalMove>> reservedHistory;
 	while (chImpl->_history.size() > 0) {
 		reservedHistory.push_back(chImpl->_undoMove());
 	}
@@ -39,16 +39,16 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	}
 	while (reservedHistory.size() > 0) {
 		moveString = appendComment(moveString);
-		std::optional<internalMove> m = reservedHistory.back();
+		std::optional<InternalMove> m = reservedHistory.back();
 		reservedHistory.pop_back();
 
 		if (!m) break;
 
-		if (chImpl->_history.size() == 0 && m.value().color == color::b) {
+		if (chImpl->_history.size() == 0 && m.value().color == Color::b) {
 			const std::string prefix = std::to_string(chImpl->_moveNumber) + ". ...";
 			moveString = !moveString.empty() ? moveString + " " + prefix : prefix;
 		}
-		else if (m.value().color == color::w) {
+		else if (m.value().color == Color::w) {
 			if (!moveString.empty()) {
 				moves.push_back(moveString);
 			}
@@ -122,8 +122,8 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	return join(result, "");
 }
 
-std::vector<std::optional<pieceSymbol>> Chess::getAttackingPieces(color c, square sq) {
-	return chImpl->_getAttackingPiece(c, squareTo0x88(sq));
+std::vector<std::optional<PieceSymbol>> Chess::getAttackingPieces(Color c, Square sq) {
+	return chImpl->_getAttackingPiece(c, Ox88.at((int)(sq)));
 }
 
 void Chess::loadPgn(std::string pgn, bool strict, std::string newlineChar) {
@@ -322,8 +322,8 @@ std::string Chess::ascii(bool isWhitePersp) {
 		}
 
 		if (chImpl->_board[i]) {
-			pieceSymbol p = chImpl->_board[i].value().type;
-			color c = chImpl->_board[i].value().color;
+			PieceSymbol p = chImpl->_board[i].value().type;
+			Color c = chImpl->_board[i].value().color;
 			char symbol = c == WHITE ? static_cast<char>(std::toupper(pieceToChar(p))) : static_cast<char>(std::tolower(pieceToChar(p)));
 			s += " " + std::string(1, symbol) + " ";
 		}
@@ -358,14 +358,14 @@ std::string Chess::fen() {
 	int empty = 0;
 	std::string fen = "";
 
-	for (int i = squareTo0x88(square::a8); i <= squareTo0x88(square::h1); i++) {
+	for (int i = 0; i <= 119; i++) {
 		if (chImpl->_board[i]) {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 				empty = 0;
 			}
-			color c = chImpl->_board[i].value().color;
-			pieceSymbol type = chImpl->_board[i].value().type;
+			Color c = chImpl->_board[i].value().color;
+			PieceSymbol type = chImpl->_board[i].value().type;
 
 			fen += c == WHITE ? std::toupper(pieceToChar(type)) : std::tolower(pieceToChar(type));
 		}
@@ -377,7 +377,7 @@ std::string Chess::fen() {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 			}
-			if (i != squareTo0x88(square::h1)) {
+			if (i != 119) {
 				fen += '/';
 			}
 
@@ -387,16 +387,16 @@ std::string Chess::fen() {
 	}
 
 	std::string castling = "";
-	if (chImpl->_castling[WHITE] & BITS.at("KSIDE_CASTLE")) {
+	if (chImpl->_castling[WHITE] & BITS_KSIDE_CASTLE) {
 		castling += 'K';
 	}
-	if (chImpl->_castling[WHITE] & BITS.at("QSIDE_CASTLE")) {
+	if (chImpl->_castling[WHITE] & BITS_QSIDE_CASTLE) {
 		castling += 'Q';
 	}
-	if (chImpl->_castling[BLACK] & BITS.at("KSIDE_CASTLE")) {
+	if (chImpl->_castling[BLACK] & BITS_KSIDE_CASTLE) {
 		castling += 'k';
 	}
-	if (chImpl->_castling[BLACK] & BITS.at("QSIDE_CASTLE")) {
+	if (chImpl->_castling[BLACK] & BITS_QSIDE_CASTLE) {
 		castling += 'q';
 	}
 
@@ -405,14 +405,14 @@ std::string Chess::fen() {
 	std::string epSquare = "-";
 
 	if (chImpl->_epSquare != EMPTY) {
-		square bigPawnSquare = static_cast<square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
+		Square bigPawnSquare = static_cast<Square>(chImpl->_epSquare + (chImpl->_turn == WHITE ? 16 : -16));
 		std::vector<int> squares = { static_cast<int>(bigPawnSquare) + 1, static_cast<int>(bigPawnSquare) - 1 };
 		for (auto& sq : squares) {
 			if (sq & 0x88) {
 				continue;
 			}
-			color ct = chImpl->_turn;
-			std::optional<piece> p = chImpl->_board[sq];
+			Color ct = chImpl->_turn;
+			std::optional<Piece> p = chImpl->_board[sq];
 			if (
 				p &&
 				p.value().color == ct &&
@@ -425,7 +425,7 @@ std::string Chess::fen() {
 					PAWN,
 					PAWN,
 					std::nullopt,
-					BITS.at("EP_CAPTURE")
+					BITS_EP_CAPTURE
 					});
 				bool isLegal = !chImpl->_isKingAttacked(ct);
 				chImpl->_undoMove();
@@ -484,7 +484,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 			squ += std::stoi(p);
 		}
 		else {
-			const color color = p[0] < 'a' ? WHITE : BLACK;
+			const Color color = p[0] < 'a' ? WHITE : BLACK;
 			try {
 				chImpl->_put(charToSymbol(std::tolower(p[0])), color, algebraic(squ));
 			}
@@ -503,15 +503,15 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	auto queenSideCastleBlack = std::find(tokens[2].begin(), tokens[2].end(), 'q');
 
 	if (kingSideCastleWhite != tokens[2].end())
-		chImpl->_castling.at(WHITE) |= BITS.at("KSIDE_CASTLE");
+		chImpl->_castling.at(WHITE) |= BITS_KSIDE_CASTLE;
 	if (queenSideCastleWhite != tokens[2].end())
-		chImpl->_castling.at(WHITE) |= BITS.at("QSIDE_CASTLE");
+		chImpl->_castling.at(WHITE) |= BITS_QSIDE_CASTLE;
 	if (kingSideCastleBlack != tokens[2].end())
-		chImpl->_castling.at(BLACK) |= BITS.at("KSIDE_CASTLE");
+		chImpl->_castling.at(BLACK) |= BITS_KSIDE_CASTLE;
 	if (queenSideCastleBlack != tokens[2].end())
-		chImpl->_castling.at(BLACK) |= BITS.at("QSIDE_CASTLE");
+		chImpl->_castling.at(BLACK) |= BITS_QSIDE_CASTLE;
 
-	chImpl->_epSquare = tokens[3] == "-" ? EMPTY : squareTo0x88(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? EMPTY : Ox88.at((int)(stringToSquare(tokens[3])));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 
@@ -569,7 +569,7 @@ std::vector<move> Chess::historym() {
 }
 
 std::vector<std::variant<std::string, move>> Chess::history(bool verbose) {
-	std::vector<std::optional<internalMove>> reservedHistory;
+	std::vector<std::optional<InternalMove>> reservedHistory;
 	std::vector<std::variant<std::string, move>> moveHistory;
 
 	while (chImpl->_history.size() > 0) {

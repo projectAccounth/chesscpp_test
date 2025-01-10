@@ -25,53 +25,49 @@
 // Empty square
 #define EMPTY -1
 
-typedef struct internalMove {
-    color color;
+typedef struct InternalMove {
+    Color color;
     int from;
     int to;
-    pieceSymbol piece;
-    std::optional<pieceSymbol> captured;
-    std::optional<pieceSymbol> promotion;
+    PieceSymbol piece;
+    std::optional<PieceSymbol> captured;
+    std::optional<PieceSymbol> promotion;
     int flags;
-} internalMove;
+} InternalMove;
 
 class History {
 public:
-    internalMove move;
-    std::map<color, int> kings;
-    color turn;
-    std::map<color, int> castling;
+    InternalMove move;
+    std::map<Color, int> kings;
+    Color turn;
+    std::map<Color, int> castling;
     int epSquare;
     int halfMoves;
     int moveNumber;
 };
 
-const std::unordered_map<std::string, char> FLAGS = {
-    {"NORMAL", 'n'},
-    {"CAPTURE", 'c'},
-    {"BIG_PAWN", 'b'},
-    {"EP_CAPTURE", 'e'},
-    {"PROMOTION", 'p'},
-    {"KSIDE_CASTLE", 'k'},
-    {"QSIDE_CASTLE", 'q'}
+const char FLAGS_NORMAL = 'n';
+const char FLAGS_CAPTURE = 'c';
+const char FLAGS_BIG_PAWN = 'b';
+const char FLAGS_EP_CAPTURE = 'e';
+const char FLAGS_PROMOTION = 'p';
+const char FLAGS_KSIDE_CASTLE = 'k';
+const char FLAGS_QSIDE_CASTLE = 'q';
+
+const int BITS_NORMAL = 1;
+const int BITS_CAPTURE = 2;
+const int BITS_BIG_PAWN = 4;
+const int BITS_EP_CAPTURE = 8;
+const int BITS_PROMOTION = 16;
+const int BITS_KSIDE_CASTLE = 32;
+const int BITS_QSIDE_CASTLE = 64;
+
+const std::map<Color, std::vector<int>> PAWN_OFFSETS = {
+    {Color::b, {16, 32, 17, 15}}, // Black pawn offsets
+    {Color::w, {-16, -32, -17, -15}} // White pawn offsets
 };
 
-const std::unordered_map<std::string, int> BITS = {
-    {"NORMAL", 1},
-    {"CAPTURE", 2},
-    {"BIG_PAWN", 4},
-    {"EP_CAPTURE", 8},
-    {"PROMOTION", 16},
-    {"KSIDE_CASTLE", 32},
-    {"QSIDE_CASTLE", 64}
-};
-
-const std::map<color, std::vector<int>> PAWN_OFFSETS = {
-    {color::b, {16, 32, 17, 15}}, // Black pawn offsets
-    {color::w, {-16, -32, -17, -15}} // White pawn offsets
-};
-
-const std::map<pieceSymbol, std::vector<int>> PIECE_OFFSETS = {
+const std::map<PieceSymbol, std::vector<int>> PIECE_OFFSETS = {
     {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
     {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
     {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
@@ -114,30 +110,35 @@ const std::vector<int> RAYS = {
         -15, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, 0, -17
 };
 
-const std::map<pieceSymbol, int> PIECE_MASKS = {{pieceSymbol::p, 0x1}, {pieceSymbol::n, 0x2}, {pieceSymbol::b, 0x4}, {pieceSymbol::r, 0x8}, {pieceSymbol::q, 0x10}, {pieceSymbol::k, 0x20}};
+const std::array<int, 64> Ox88 = {
+    0, 1, 2, 3, 4, 5, 6, 7,
+    16, 17, 18, 19, 20, 21, 22, 23,
+    32, 33, 34, 35, 36, 37, 38, 39,
+    48, 49, 50, 51, 52, 53, 54, 55,
+    64, 65, 66, 67, 68, 69, 70, 71,
+    80, 81, 82, 83, 84, 85, 86, 87,
+    96, 97, 98, 99, 100, 101, 102, 103,
+    112, 113, 114, 115, 116, 117, 118, 119
+};
+const std::unordered_map<PieceSymbol, int> PIECE_MASKS = {{PAWN, 0x1}, {KNIGHT, 0x2}, {BISHOP, 0x4}, {ROOK, 0x8}, {QUEEN, 0x10}, {KING, 0x20}};
 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 
-const std::array<pieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
-
-const std::map<pieceSymbol, int> SIDES = {
-    {KING, BITS.at("KSIDE_CASTLE")},
-    {QUEEN, BITS.at("QSIDE_CASTLE")}
-};
+const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
 struct RookPosition {
     int square;
     int flag;
 };
 
-const std::map<color, std::vector<RookPosition>> ROOKS = {
-    {color::w, {
-        {0, BITS.at("QSIDE_CASTLE")},
-        {7, BITS.at("KSIDE_CASTLE")}
+const std::map<Color, std::vector<RookPosition>> ROOKS = {
+    {Color::w, {
+        {0, BITS_QSIDE_CASTLE},
+        {7, BITS_KSIDE_CASTLE}
     }},
-    {color::b, {
-        {56, BITS.at("QSIDE_CASTLE")},
-        {63, BITS.at("KSIDE_CASTLE")}
+    {Color::b, {
+        {56, BITS_QSIDE_CASTLE},
+        {63, BITS_KSIDE_CASTLE}
     }}
 };
 
@@ -149,8 +150,8 @@ const int RANK_8 = 0;
 
 const std::vector<std::string> TERMINATION_MARKERS = { "1-0", "0-1", "1/2-1/2", "*" };
 
-const std::map<color, int> SECOND_RANK = {
-    {color::w, RANK_2}, {color::b, RANK_7}
+const std::map<Color, int> SECOND_RANK = {
+    {Color::w, RANK_2}, {Color::b, RANK_7}
 };
 
 #endif

@@ -7,46 +7,46 @@ private:
 public:
 	chrImpl(Chess& c) : ch(c) {}
 
-	std::array<std::optional<piece>, 128> _board;
-	color _turn = WHITE;
+	std::array<std::optional<Piece>, 128> _board;
+	Color _turn = WHITE;
 	std::map<std::string, std::string> _header;
-	std::map<color, int> _kings = { { color::w, EMPTY }, { color::b, EMPTY } };
+	std::map<Color, int> _kings = { { WHITE, EMPTY }, { BLACK, EMPTY } };
 	int _epSquare = -1;
 	int _halfMoves = -1;
 	int _moveNumber = 0;
 	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
-	std::map<color, int> _castling = { { color::w, 0 }, { color::b, 0 } };
+	std::map<Color, int> _castling = { { WHITE, 0 }, { BLACK, 0 } };
 
 	std::map<std::string, std::optional<int>> _positionCount;
 
 	void _updateSetup(std::string fen);
 
-	bool _put(pieceSymbol type, color color, square sq);
+	bool _put(PieceSymbol type, Color color, Square sq);
 
 	void _updateCastlingRights();
 
 	void _updateEnPassantSquare();
 
-	bool _attacked(color c, int sq);
+	bool _attacked(Color c, int sq);
 
-	std::vector<std::optional<pieceSymbol>> _getAttackingPiece(color c, int sq);
+	std::vector<std::optional<PieceSymbol>> _getAttackingPiece(Color c, int sq);
 
-	bool _isKingAttacked(color c);
+	bool _isKingAttacked(Color c);
 
-	std::vector<internalMove> _moves(std::optional<bool> legal = true, std::optional<pieceSymbol> piece = std::nullopt, std::optional<std::string> sq = std::nullopt);
+	std::vector<InternalMove> _moves(std::optional<bool> legal = true, std::optional<PieceSymbol> piece = std::nullopt, std::optional<std::string> sq = std::nullopt);
 
-	void _push(internalMove move);
+	void _push(InternalMove move);
 
-	void _makeMove(internalMove move);
+	void _makeMove(InternalMove move);
 
-	std::optional<internalMove> _undoMove();
+	std::optional<InternalMove> _undoMove();
 
-	std::string _moveToSan(internalMove move, std::vector<internalMove> moves);
+	std::string _moveToSan(InternalMove move, std::vector<InternalMove> moves);
 
-	std::optional<internalMove> _moveFromSan(std::string move, bool strict = false);
+	std::optional<InternalMove> _moveFromSan(std::string move, bool strict = false);
 
-	move _makePretty(internalMove uglyMove);
+	move _makePretty(InternalMove uglyMove);
 
 	int _getPositionCount(std::string fen);
 

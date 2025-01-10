@@ -16,7 +16,7 @@
 
 std::string trim(const std::string& str);
 
-bool operator<(square lhs, square rhs);
+bool operator<(Square lhs, Square rhs);
 
 std::vector<std::string> split(const std::string& str, char delimiter);
 
@@ -26,26 +26,26 @@ std::string join(const std::vector<std::string>& elements, const std::string& de
 
 bool isDigit(std::string c);
 
-color swapColor(color color);
+Color swapColor(Color color);
 
-std::string getDisambiguator(internalMove move, std::vector<internalMove> moves);
+std::string getDisambiguator(InternalMove move, std::vector<InternalMove> moves);
 
-void addMove(std::vector<internalMove>& moves, color color, int from, int to, pieceSymbol p, std::optional<pieceSymbol> captured = std::nullopt, int flags = BITS.at("NORMAL"));
+void addMove(std::vector<InternalMove>& moves, Color color, int from, int to, PieceSymbol p, std::optional<PieceSymbol> captured = std::nullopt, int flags = BITS_NORMAL);
 
 std::string replaceSubstring(const std::string& str, const std::string& from, const std::string& to);
 
-std::optional<pieceSymbol> inferPieceType(std::string san);
+std::optional<PieceSymbol> inferPieceType(std::string san);
 
 std::string strippedSan(std::string move);
 
 std::string trimFen(std::string fen);
 
-int squareTo0x88(const square& sq);
+int squareTo0x88(const Square& sq);
 
-bool isValid8x8(const square& sq);
+bool isValid8x8(const Square& sq);
 
 bool isValid0x88(const int& sq);
 
-char pieceToChar(const pieceSymbol& p);
+char pieceToChar(const PieceSymbol& p);
 
-pieceSymbol charToSymbol(const char& c);
+PieceSymbol charToSymbol(const char& c);
