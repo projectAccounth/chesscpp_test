@@ -77,10 +77,10 @@ Color swapColor(Color color) {
 	return color == WHITE ? BLACK : WHITE;
 }
 
-std::string getDisambiguator(internalMove move, std::vector<internalMove> moves) {
+std::string getDisambiguator(InternalMove move, std::vector<InternalMove> moves) {
 	const Square from = algebraic(move.from);
 	const Square to = algebraic(move.to);
-	const pieceSymbol p = move.piece;
+	const PieceSymbol p = move.piece;
 
 	int ambiguities = 0;
 	int sameRank = 0;
@@ -89,7 +89,7 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 		const Square ambigFrom = algebraic(moves[i].from);
 		const Square ambigTo = algebraic(moves[i].to);
-		const pieceSymbol ambigPiece = moves[i].piece;
+		const PieceSymbol ambigPiece = moves[i].piece;
 
 		if (!(p == ambigPiece && from != ambigFrom && to == ambigTo)) continue;
 
@@ -115,11 +115,11 @@ std::string getDisambiguator(internalMove move, std::vector<internalMove> moves)
 	}
 }
 
-void addMove(std::vector<internalMove>& moves, Color color, int from, int to, pieceSymbol p, pieceSymbol captured, int flags) {
+void addMove(std::vector<InternalMove>& moves, Color color, int from, int to, PieceSymbol p, PieceSymbol captured, int flags) {
 	const int r = rank(to);
 	if (p == PAWN && (r == RANK_1 || r == RANK_8)) {
 		for (int i = 0; i < static_cast<int>(PROMOTIONS.size()); i++) {
-			const pieceSymbol promotion = PROMOTIONS[i];
+			const PieceSymbol promotion = PROMOTIONS[i];
 			moves.push_back({
 				color,
 				from,
@@ -248,7 +248,7 @@ std::pair<bool, std::string> validateFen(std::string fen) {
 	return { true, "" };
 }
 
-pieceSymbol inferPieceType(std::string san) {
+PieceSymbol inferPieceType(std::string san) {
 	char pieceType = san.at(0);
 	if (pieceType >= 'a' && pieceType <= 'h') {
 		std::regex pattern("[a-h]\\d.*[a-h]\\d");

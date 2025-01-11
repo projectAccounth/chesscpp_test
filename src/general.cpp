@@ -8,8 +8,14 @@ void Chess::reset() {
 	load(DEFAULT_POSITION);
 }
 
-piece::operator bool() const {
-	return !(type == PNONE && color == Color::NO_COLOR);
+bool Piece::isDefault() const {
+	return type == PNONE || color == Color::NO_COLOR;
+}
+
+Piece::Piece() : type(PNONE), color(Color::NO_COLOR) {}
+
+Piece::operator bool() const {
+	return !isDefault();
 }
 
 std::string Chess::pgn(char newline, int maxWidth) {
@@ -32,7 +38,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 		}
 		return moveString;
 		};
-	std::vector<internalMove> reservedHistory;
+	std::vector<InternalMove> reservedHistory;
 	while (chImpl->_history.size() > 0) {
 		reservedHistory.push_back(chImpl->_undoMove());
 	}
@@ -45,7 +51,7 @@ std::string Chess::pgn(char newline, int maxWidth) {
 	}
 	while (reservedHistory.size() > 0) {
 		moveString = appendComment(moveString);
-		internalMove m = reservedHistory.back();
+		InternalMove m = reservedHistory.back();
 		reservedHistory.pop_back();
 
 		if (!m) break;
@@ -324,7 +330,7 @@ std::string Chess::ascii(bool isWhitePersp) {
 		}
 
 		if (chImpl->_board[i]) {
-			pieceSymbol p = chImpl->_board[i].type;
+			PieceSymbol p = chImpl->_board[i].type;
 			Color c = chImpl->_board[i].color;
 			char symbol = c == WHITE ? static_cast<char>(std::toupper(pieceToChar(p))) : static_cast<char>(std::tolower(pieceToChar(p)));
 			s += " " + std::string(1, symbol) + " ";
@@ -367,7 +373,7 @@ std::string Chess::fen() {
 				empty = 0;
 			}
 			Color c = chImpl->_board[i].color;
-			pieceSymbol type = chImpl->_board[i].type;
+			PieceSymbol type = chImpl->_board[i].type;
 
 			fen += (c == WHITE) ? static_cast<char>(std::toupper(pieceToChar(type))) : static_cast<char>(std::tolower(pieceToChar(type)));
 		}
@@ -414,7 +420,7 @@ std::string Chess::fen() {
 				continue;
 			}
 			Color ct = chImpl->_turn;
-			piece p = chImpl->_board[sq];
+			Piece p = chImpl->_board[sq];
 			if (
 				p &&
 				p.color == ct &&
@@ -571,7 +577,7 @@ std::vector<move> Chess::historym() {
 }
 
 std::vector<std::tuple<std::string, move>> Chess::history(bool verbose) {
-	std::vector<internalMove> reservedHistory;
+	std::vector<InternalMove> reservedHistory;
 	std::vector<std::tuple<std::string, move>> moveHistory;
 
 	while (chImpl->_history.size() > 0) {

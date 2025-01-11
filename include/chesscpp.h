@@ -74,15 +74,15 @@ public:
 	void reset();
 
 	/*
-	* Returns a piece on the specified square. Returns piece() if nothing is found.
+	* Returns a piece on the specified square. Returns Piece() if nothing is found.
 	*/
-	piece get(Square sq);
+	Piece get(Square sq);
 
 	// Puts a piece of a type on the specified square with the specified color.
-	bool put(pieceSymbol type, Color c, Square sq);
+	bool put(PieceSymbol type, Color c, Square sq);
 
 	// Removes a piece from a square. Returns std::nullopt if no pieces were removed.
-	piece remove(Square sq);
+	Piece remove(Square sq);
 
 	// Checks whether the king is attacked by the other side.
 	bool isAttacked(Square sq, Color attackedBy);
@@ -115,9 +115,9 @@ public:
 	std::vector<std::string> moves();
 
 	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<move> moves(bool verbose, std::string sq, pieceSymbol piece = PNONE);
+	std::vector<move> moves(bool verbose, std::string sq, PieceSymbol piece = PNONE);
 
-	std::vector<move> moves(std::string sq, pieceSymbol piece);
+	std::vector<move> moves(std::string sq, PieceSymbol piece);
 	/*
 	* Moves the specified piece to a specific position on the board.
 	* 
@@ -168,7 +168,7 @@ public:
 	Color turn();
 
 	// Returns the current board. Useful for analysis.
-	std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> board();
+	std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> board();
 
 	// Returns the current square color of the specified square. Either "light" or "dark" or an empty string (if square is invalid) is returned.
 	std::string squareColor(Square sq);
@@ -188,7 +188,7 @@ public:
 	// Returns the current move number, in full moves.
 	int moveNumber();
 
-	bool setCastlingRights(const Color& c, std::pair<pieceSymbol, bool> rights);
+	bool setCastlingRights(const Color& c, std::pair<PieceSymbol, bool> rights);
 
 	~Chess();
 };

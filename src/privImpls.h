@@ -28,13 +28,13 @@ bool isDigit(std::string c);
 
 Color swapColor(Color color);
 
-std::string getDisambiguator(internalMove move, std::vector<internalMove> moves);
+std::string getDisambiguator(InternalMove move, std::vector<InternalMove> moves);
 
-void addMove(std::vector<internalMove>& moves, Color color, int from, int to, pieceSymbol p, pieceSymbol captured = PNONE, int flags = BITS_NORMAL);
+void addMove(std::vector<InternalMove>& moves, Color color, int from, int to, PieceSymbol p, PieceSymbol captured = PNONE, int flags = BITS_NORMAL);
 
 std::string replaceSubstring(const std::string& str, const std::string& from, const std::string& to);
 
-pieceSymbol inferPieceType(std::string san);
+PieceSymbol inferPieceType(std::string san);
 
 std::string strippedSan(std::string move);
 
@@ -60,7 +60,7 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (at getSecondRank)");
 	}
 
-	static inline int getCastlingSide(const pieceSymbol& p) {
+	static inline int getCastlingSide(const PieceSymbol& p) {
 		switch (p) {
 		case KING: return BITS_KSIDE_CASTLE;
 		case QUEEN: return BITS_QSIDE_CASTLE;
@@ -69,7 +69,7 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (at getCastlingSide)");
 	}
 
-	static inline pieceSymbol charToSymbol(const char& c) {
+	static inline PieceSymbol charToSymbol(const char& c) {
 		switch (c) {
 		case 'p': return PAWN;
 		case 'n': return KNIGHT;
@@ -81,7 +81,7 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (at charToSymbol)");
 	}
 
-	static inline char pieceToChar(const pieceSymbol& p) {
+	static inline char pieceToChar(const PieceSymbol& p) {
 		switch (p) {
 		case PAWN: return 'p';
 		case KNIGHT: return 'n';
@@ -94,7 +94,7 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (at pieceToChar)");
 	}
 
-	static inline std::vector<int> getPieceOffsets(const pieceSymbol& p) {
+	static inline std::vector<int> getPieceOffsets(const PieceSymbol& p) {
 		switch (p) {
 		case KNIGHT: return { -18, -33, -31, -14, 18, 33, 31, 14 };
 		case BISHOP: return { -17, -15, 17, 15 };
@@ -109,7 +109,7 @@ namespace privs {
 		throw std::invalid_argument("Invalid piece (or not supported) (at getPieceOffsets)");
 	}
 
-	static inline int getPieceMasks(const pieceSymbol& p) {
+	static inline int getPieceMasks(const PieceSymbol& p) {
 		switch (p) {
 		case PAWN: return 0x1;
 		case KNIGHT: return 0x2;

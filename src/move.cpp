@@ -8,14 +8,14 @@ Color Chess::turn() {
 	return chImpl->_turn;
 }
 
-piece Chess::remove(Square sq) {
-	piece p = get(sq);
-	chImpl->_board[squareTo0x88(sq)] = piece();
+Piece Chess::remove(Square sq) {
+	Piece p = get(sq);
+	chImpl->_board[squareTo0x88(sq)] = Piece();
 	if (p && p.type == KING) {
 		chImpl->_kings[p.color] = -1;
 	}
 	else if (!p) {
-		return piece();
+		return Piece();
 	}
 
 	chImpl->_updateCastlingRights();
@@ -26,7 +26,7 @@ piece Chess::remove(Square sq) {
 }
 
 move Chess::undo() {
-	internalMove m = chImpl->_undoMove();
+	InternalMove m = chImpl->_undoMove();
 	if (m) {
 		move prettyMove = chImpl->_makePretty(m);
 		chImpl->_decPositionCount(prettyMove.after);
@@ -43,13 +43,13 @@ std::string Chess::squareColor(Square sq) {
 	return "";
 }
 
-piece Chess::get(Square sq) {
+Piece Chess::get(Square sq) {
 	int sqi = static_cast<int>(sq);
-	return chImpl->_board[sqi] ? chImpl->_board[sqi] : piece();
+	return chImpl->_board[sqi] ? chImpl->_board[sqi] : Piece();
 }
 
 move Chess::cmove(const std::string& moveArg, bool strict) {
-	internalMove moveObj = internalMove();
+	InternalMove moveObj = InternalMove();
 	moveObj = chImpl->_moveFromSan(moveArg, strict);
 	if (!moveObj) {
 		throw std::runtime_error("Invalid move: " + moveArg);
@@ -64,15 +64,15 @@ move Chess::cmove(const std::string& moveArg, bool strict) {
 
 
 move Chess::cmove(const moveOption& moveArg) {
-	internalMove moveObj = internalMove();
-	std::vector<internalMove> moves = chImpl->_moves();
+	InternalMove moveObj = InternalMove();
+	std::vector<InternalMove> moves = chImpl->_moves();
 	move m = {
 		chImpl->_turn,
 		stringToSquare(moveArg.from),
 		stringToSquare(moveArg.to),
 		PNONE,
 		PNONE,
-		!moveArg.promotion.empty() ? pieceSymbol(charToSymbol(moveArg.promotion[0])) : PNONE
+		!moveArg.promotion.empty() ? PieceSymbol(charToSymbol(moveArg.promotion[0])) : PNONE
 	};
 	for (int i = 0; i < static_cast<int>(moves.size()); i++) {
 		if (
@@ -97,15 +97,22 @@ move Chess::cmove(const moveOption& moveArg) {
 }
 
 int Chess::perft(int depth) {
-	const std::vector<internalMove> moves = chImpl->_moves(false);
+	if (depth < 0) {
+		throw std::invalid_argument("What the hell?");
+	}
+	const std::vector<InternalMove> moves = chImpl->_moves(false);
 	int nodes = 0;
-	Color us = chImpl->_turn;
+	Color c = chImpl->_turn;
 
+	if (depth == 1) return static_cast<int>(moves.size());
 	if (depth == 0) return 1;
 
 	for (const auto& m : moves) {
 		chImpl->_makeMove(m);
-		if (!chImpl->_isKingAttacked(us)) nodes += perft(depth - 1);
+		if (!chImpl->_isKingAttacked(c))
+			nodes += perft(depth - 1);
+		else
+			nodes++;
 		chImpl->_undoMove();
 	}
 	return nodes;
@@ -119,7 +126,7 @@ std::pair<bool, bool> Chess::getCastlingRights(Color c) {
 }
 
 void Chess::clear(bool preserveHeaders) {
-	chImpl->_board = std::vector<piece>(128, piece());
+	chImpl->_board = std::vector<Piece>(128, Piece());
 	chImpl->_kings = { { Color::w, -1 }, { Color::b, -1 } };
 	chImpl->_turn = WHITE;
 	chImpl->_castling = { {Color::w, 0}, {Color::b, 0} };
@@ -148,25 +155,25 @@ std::unordered_map<std::string, std::string> Chess::header(std::vector<std::stri
 	return chImpl->_header;
 }
 
-std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> Chess::board() {
-	std::vector<std::vector<std::tuple<Square, pieceSymbol, Color>>> output = {};
-	std::vector<std::tuple<Square, pieceSymbol, Color>> row = {};
+std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> Chess::board() {
+	std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> output = {};
+	std::vector<std::tuple<Square, PieceSymbol, Color>> row = {};
 
 	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
 		if (!chImpl->_board[i]) {
 			row.push_back({ EMPTY, PNONE, Color::NO_COLOR });
 		}
 		else {
-			row.push_back(std::tuple<Square, pieceSymbol, Color>{
+			row.push_back(std::tuple<Square, PieceSymbol, Color>{
 				algebraic(i),
 				chImpl->_board[i].type,
 				chImpl->_board[i].color
 			});
 		}
 		if ((i + 1) & 0x88) {
-			std::vector<std::tuple<Square, pieceSymbol, Color>> trow;
+			std::vector<std::tuple<Square, PieceSymbol, Color>> trow;
 			for (const auto& elem : row) {
-				bool hasValue = (std::get<Square>(elem) != EMPTY && std::get<pieceSymbol>(elem) != PNONE && std::get<Color>(elem) != Color::NO_COLOR);
+				bool hasValue = (std::get<Square>(elem) != EMPTY && std::get<PieceSymbol>(elem) != PNONE && std::get<Color>(elem) != Color::NO_COLOR);
 				if (hasValue) {
 					trow.push_back(elem);
 				}
@@ -195,13 +202,13 @@ bool Chess::inSufficientMaterial() {
 	 * k.b. vs k.n. with mate in 1:
 	 * 8/8/8/8/1n6/8/B7/K1k5 b - - 2 1
 	 */
-	std::map<pieceSymbol, int> pieces = {
-		{pieceSymbol::b, 0},
-		{pieceSymbol::n, 0},
-		{pieceSymbol::r, 0},
-		{pieceSymbol::q, 0},
-		{pieceSymbol::k, 0},
-		{pieceSymbol::p, 0},
+	std::map<PieceSymbol, int> pieces = {
+		{PieceSymbol::b, 0},
+		{PieceSymbol::n, 0},
+		{PieceSymbol::r, 0},
+		{PieceSymbol::q, 0},
+		{PieceSymbol::k, 0},
+		{PieceSymbol::p, 0},
 	};
 	std::vector<int> bishops = {};
 	int numPieces = 0;
@@ -249,7 +256,7 @@ bool Chess::isThreefoldRepetition() {
 	return chImpl->_getPositionCount(fen()) >= 3;
 }
 
-bool Chess::put(pieceSymbol type, Color c, Square sq) {
+bool Chess::put(PieceSymbol type, Color c, Square sq) {
 	if (chImpl->_put(type, c, sq)) {
 		chImpl->_updateCastlingRights();
 		chImpl->_updateEnPassantSquare();
@@ -259,8 +266,8 @@ bool Chess::put(pieceSymbol type, Color c, Square sq) {
 	return false;
 }
 
-std::vector<move> Chess::moves(bool verbose, std::string sq, pieceSymbol piece) {
-	std::vector<internalMove> generatedMoves = chImpl->_moves(true, piece, sq);
+std::vector<move> Chess::moves(bool verbose, std::string sq, PieceSymbol piece) {
+	std::vector<InternalMove> generatedMoves = chImpl->_moves(true, piece, sq);
 
 	std::vector<move> result;
 	for (const auto& internal: generatedMoves) {
@@ -287,7 +294,7 @@ std::vector<move> Chess::moves(bool verbose, std::string sq, pieceSymbol piece) 
 }
 
 std::vector<std::string> Chess::moves() {
-	std::vector<internalMove> generatedMoves = chImpl->_moves(true);
+	std::vector<InternalMove> generatedMoves = chImpl->_moves(true);
 
 	std::vector<std::string> result;
 
@@ -298,6 +305,6 @@ std::vector<std::string> Chess::moves() {
 	return result;
 }
 
-std::vector<move> Chess::moves(std::string sq, pieceSymbol piece) {
+std::vector<move> Chess::moves(std::string sq, PieceSymbol piece) {
 	return moves(true, sq, piece);
 }

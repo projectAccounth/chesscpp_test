@@ -23,21 +23,21 @@
 // Empty square
 #define EMPTY Square::NO_SQUARE
 
-typedef struct internalMove {
+typedef struct InternalMove {
     Color color = Color::NO_COLOR;
     int from = -1;
     int to = -1;
-    pieceSymbol piece = PNONE;
-    pieceSymbol captured = PNONE;
-    pieceSymbol promotion = PNONE;
+    PieceSymbol piece = PNONE;
+    PieceSymbol captured = PNONE;
+    PieceSymbol promotion = PNONE;
     int flags = 0;
 
     explicit operator bool() const;
-} internalMove;
+} InternalMove;
 
 class History {
 public:
-    internalMove move = internalMove();
+    InternalMove move = InternalMove();
     std::map<Color, int> kings = std::map<Color, int>();
     Color turn = Color::NO_COLOR;
     std::map<Color, int> castling = std::map<Color, int>();
@@ -112,9 +112,9 @@ const std::vector<int> RAYS = {
 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 
-const std::array<pieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
+const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
-const std::unordered_map<pieceSymbol, int> SIDES = {
+const std::unordered_map<PieceSymbol, int> SIDES = {
     {KING, BITS_KSIDE_CASTLE},
     {QUEEN, BITS_QSIDE_CASTLE}
 };

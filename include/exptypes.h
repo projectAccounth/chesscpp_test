@@ -18,7 +18,7 @@ enum class Square : int {
     a1, b1, c1, d1, e1, f1, g1, h1,
     NO_SQUARE = -1
 };
-enum class pieceSymbol : int {
+enum class PieceSymbol : int {
     p, n, b, r, q, k, NO_PIECE = -10
 };
 enum class Color {
@@ -40,35 +40,37 @@ const std::array<std::string, 64> SQUARES = {
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
 };
 
-#define PAWN pieceSymbol::p
-#define ROOK pieceSymbol::r
-#define KNIGHT pieceSymbol::n
-#define BISHOP pieceSymbol::b
-#define QUEEN pieceSymbol::q
-#define KING pieceSymbol::k
-#define PNONE pieceSymbol::NO_PIECE
+#define PAWN PieceSymbol::p
+#define ROOK PieceSymbol::r
+#define KNIGHT PieceSymbol::n
+#define BISHOP PieceSymbol::b
+#define QUEEN PieceSymbol::q
+#define KING PieceSymbol::k
+#define PNONE PieceSymbol::NO_PIECE
 
 // Notation for white piece
 #define WHITE Color::w
 // Notation for black piece
 #define BLACK Color::b
 
-struct piece {
+struct Piece {
     Color color = Color::NO_COLOR;
-    pieceSymbol type = PNONE;
+    PieceSymbol type = PNONE;
 
+    Piece();
+    bool isDefault() const;
     explicit operator bool() const;
 };
 
-typedef struct internalMove internalMove;
+typedef struct InternalMove InternalMove;
 
 typedef struct move {
     Color color = Color::NO_COLOR;
     Square from = Square::NO_SQUARE;
     Square to = Square::NO_SQUARE;
-    pieceSymbol piece = PNONE;
-    pieceSymbol captured = PNONE;
-    pieceSymbol promotion = PNONE;
+    PieceSymbol piece = PNONE;
+    PieceSymbol captured = PNONE;
+    PieceSymbol promotion = PNONE;
     std::string flags = "";
     std::string san = "";
     std::string lan = "";

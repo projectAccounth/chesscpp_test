@@ -7,9 +7,9 @@ class Chess::chrImpl {
 private:
 	Chess& ch;
 public:
-	chrImpl(Chess& c) : ch(c) { _board = std::vector<piece>(128, piece()); }
+	chrImpl(Chess& c) : ch(c) { _board = std::vector<Piece>(128, Piece()); }
 
-	std::vector<piece> _board;
+	std::vector<Piece> _board;
 	Color _turn = WHITE;
 	std::unordered_map<std::string, std::string> _header;
 	std::map<Color, int> _kings = { { WHITE, -1 }, { BLACK, -1 } };
@@ -24,62 +24,32 @@ public:
 
 	void _updateSetup(std::string fen);
 
-	bool _put(pieceSymbol type, Color color, Square sq);
+	bool _put(PieceSymbol type, Color color, Square sq);
 
 	void _updateCastlingRights();
 
 	void _updateEnPassantSquare();
 
-	inline bool _attacked(Color c, int sq) {
-		for (int i = 0; i <= 0x77; i++) {
-			if (i & 0x88) { i += 7; continue; }
-			piece currentSq = _board[i];
-			if (!currentSq || currentSq.color != c) continue;
-			const int diff = i - sq;
-
-			if (diff == 0) continue;
-			const int index = diff + 0x77;
-			if (ATTACKS[index] & getPieceMasks(currentSq.type)) {
-				if (currentSq.type == PAWN) {
-					if (diff > 0) { if (currentSq.color == WHITE) return true; }
-					else { if (currentSq.color == BLACK) return true; }
-					continue;
-				}
-
-				if (currentSq.type == KNIGHT || currentSq.type == KING) return true;
-
-				const int offset = RAYS[index];
-				int j = i + offset;
-
-				bool blocked = false;
-				while (j != sq) {
-					if (_board[j]) { blocked = true; break; }
-					j += offset;
-				}
-				if (!blocked) return true;
-			}
-		}
-		return false;
-	}
+	bool _attacked(Color c, int sq);
 
 	inline bool _isKingAttacked(Color c) {
 		const int sq = _kings[c];
 		return sq == -1 ? false : _attacked(swapColor(c), sq);
 	}
 
-	std::vector<internalMove> _moves(bool legal = true, pieceSymbol p = PNONE, std::string sq = std::string());
+	std::vector<InternalMove> _moves(bool legal = true, PieceSymbol p = PNONE, std::string sq = std::string());
 
-	void _push(internalMove move);
+	void _push(InternalMove move);
 
-	void _makeMove(internalMove move);
+	void _makeMove(InternalMove move);
 
-	internalMove _undoMove();
+	InternalMove _undoMove();
 
-	std::string _moveToSan(internalMove move, std::vector<internalMove> moves);
+	std::string _moveToSan(InternalMove move, std::vector<InternalMove> moves);
 
-	internalMove _moveFromSan(std::string move, bool strict = false);
+	InternalMove _moveFromSan(std::string move, bool strict = false);
 
-	move _makePretty(internalMove uglyMove);
+	move _makePretty(InternalMove uglyMove);
 
 	int _getPositionCount(std::string fen);
 
