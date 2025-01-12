@@ -27,7 +27,7 @@
     <ClCompile Include="src\general.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test\perft.cpp">
+    <ClCompile Include="test\position-test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

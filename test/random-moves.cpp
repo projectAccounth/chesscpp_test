@@ -21,5 +21,7 @@ int main() {
 		std::cout << game.ascii() << '\n';
 	}
 
+	std::cout << game.pgn();
+
 	return 0;
 }

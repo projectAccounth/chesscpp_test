@@ -13,6 +13,7 @@ bool Piece::isDefault() const {
 }
 
 Piece::Piece() : type(PNONE), color(Color::NO_COLOR) {}
+Piece::Piece(Color c, PieceSymbol p) : type(p), color(c) {}
 
 Piece::operator bool() const {
 	return !isDefault();
@@ -366,7 +367,7 @@ std::string Chess::fen() {
 	int empty = 0;
 	std::string fen = "";
 
-	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
+	for (int i = 0; i <= 119; i++) {
 		if (chImpl->_board[i].type != PNONE) {
 			if (empty > 0) {
 				fen += std::to_string(empty);
@@ -385,7 +386,7 @@ std::string Chess::fen() {
 			if (empty > 0) {
 				fen += std::to_string(empty);
 			}
-			if (i != squareTo0x88(Square::h1)) {
+			if (i != 119) {
 				fen += '/';
 			}
 
@@ -519,7 +520,7 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	if (queenSideCastleBlack != tokens[2].end())
 		chImpl->_castling.at(BLACK) |= BITS_QSIDE_CASTLE;
 
-	chImpl->_epSquare = tokens[3] == "-" ? -1 : squareTo0x88(stringToSquare(tokens[3]));
+	chImpl->_epSquare = tokens[3] == "-" ? -1 : Ox88.at((int)(stringToSquare(tokens[3])));
 	chImpl->_halfMoves = std::stoi(tokens[4]);
 	chImpl->_moveNumber = std::stoi(tokens[5]);
 
@@ -602,4 +603,13 @@ std::vector<std::tuple<std::string, move>> Chess::history(bool verbose) {
 	}
 
 	return moveHistory;
+}
+
+std::string moveToUci(move m) {
+	if (m.from == EMPTY || m.to == EMPTY) return "";
+	return (
+		squareToString(m.from) +
+		squareToString(m.to) +
+		(m.promotion == PNONE ? "" : std::string(1, pieceToChar(m.promotion)))
+	);
 }

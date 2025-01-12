@@ -95,10 +95,10 @@ std::string getDisambiguator(InternalMove move, std::vector<InternalMove> moves)
 
 		ambiguities++;
 
-		if (rank(squareTo0x88(from)) == rank(squareTo0x88(ambigFrom))) {
+		if (rank(Ox88.at((int)(from))) == rank(Ox88.at((int)(ambigFrom)))) {
 			sameRank++;
 		}
-		if (file(squareTo0x88(from)) == file(squareTo0x88(ambigFrom))) {
+		if (file(Ox88.at((int)(from))) == file(Ox88.at((int)(ambigFrom)))) {
 			sameFile++;
 		}
 	}

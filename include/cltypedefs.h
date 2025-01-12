@@ -98,30 +98,40 @@ const std::vector<int> RAYS = {
     0,-15,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,-17,  0, 0,
   -15,  0,  0,  0,  0,  0,  0,-16,  0,  0,  0,  0,  0,  0,-17
 };
-//
-//const std::unordered_map<square, int> Ox88 = {
-//    {Square::a8, 0}, {Square::b8, 1}, {Square::c8, 2}, {Square::d8, 3}, {Square::e8, 4}, {Square::f8, 5}, {Square::g8, 6}, {Square::h8, 7},
-//    {Square::a7, 16}, {Square::b7, 17}, {Square::c7, 18}, {Square::d7, 19}, {Square::e7, 20}, {Square::f7, 21}, {Square::g7, 22}, {Square::h7, 23},
-//    {Square::a6, 32}, {Square::b6, 33}, {Square::c6, 34}, {Square::d6, 35}, {Square::e6, 36}, {Square::f6, 37}, {Square::g6, 38}, {Square::h6, 39},
-//    {Square::a5, 48}, {Square::b5, 49}, {Square::c5, 50}, {Square::d5, 51}, {Square::e5, 52}, {Square::f5, 53}, {Square::g5, 54}, {Square::h5, 55},
-//    {Square::a4, 64}, {Square::b4, 65}, {Square::c4, 66}, {Square::d4, 67}, {Square::e4, 68}, {Square::f4, 69}, {Square::g4, 70}, {Square::h4, 71},
-//    {Square::a3, 80}, {Square::b3, 81}, {Square::c3, 82}, {Square::d3, 83}, {Square::e3, 84}, {Square::f3, 85}, {Square::g3, 86}, {Square::h3, 87},
-//    {Square::a2, 96}, {Square::b2, 97}, {Square::c2, 98}, {Square::d2, 99}, {Square::e2, 100}, {Square::f2, 101}, {Square::g2, 102}, {Square::h2, 103},
-//    {Square::a1, 112}, {Square::b1, 113}, {Square::c1, 114}, {Square::d1, 115}, {Square::e1, 116}, {Square::f1, 117}, {Square::g1, 118}, {Square::h1, 119}
-//};
+
+const std::array<int, 64> Ox88 = {
+    0, 1, 2, 3, 4, 5, 6, 7,
+    16, 17, 18, 19, 20, 21, 22, 23,
+    32, 33, 34, 35, 36, 37, 38, 39,
+    48, 49, 50, 51, 52, 53, 54, 55,
+    64, 65, 66, 67, 68, 69, 70, 71,
+    80, 81, 82, 83, 84, 85, 86, 87,
+    96, 97, 98, 99, 100, 101, 102, 103,
+    112, 113, 114, 115, 116, 117, 118, 119
+};
 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 
 const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
-const std::unordered_map<PieceSymbol, int> SIDES = {
-    {KING, BITS_KSIDE_CASTLE},
-    {QUEEN, BITS_QSIDE_CASTLE}
-};
-
 struct RookPosition {
     int square;
     int flag;
+};
+
+const std::map<Color, std::vector<RookPosition>> ROOKS = {
+    { BLACK,
+    {
+        { 0, BITS_QSIDE_CASTLE },
+        { 7, BITS_KSIDE_CASTLE }
+    }
+    },
+    { WHITE,
+    {
+        { 112, BITS_QSIDE_CASTLE },
+        { 119, BITS_KSIDE_CASTLE }
+    }
+    }
 };
 
 const int RANK_1 = 7;

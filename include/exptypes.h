@@ -58,6 +58,7 @@ struct Piece {
     PieceSymbol type = PNONE;
 
     Piece();
+    Piece(Color c, PieceSymbol p);
     bool isDefault() const;
     explicit operator bool() const;
 };

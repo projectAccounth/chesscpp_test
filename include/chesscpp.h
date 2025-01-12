@@ -39,6 +39,8 @@ std::string squareToString(Square sq);
 // Convert a 0x88 square to algebraic notation.
 Square algebraic(int square);
 
+std::string moveToUci(move m);
+
 class Chess {
 private:	
 	class chrImpl;
@@ -162,7 +164,7 @@ public:
 	std::string ascii(bool isWhitePersp = true);
 
 	// PERFT - Performance Test.
-	int perft(int depth);
+	unsigned long long perft(int depth);
 
 	// Returns the current turn, Black or White.
 	Color turn();

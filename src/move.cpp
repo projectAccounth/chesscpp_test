@@ -10,7 +10,7 @@ Color Chess::turn() {
 
 Piece Chess::remove(Square sq) {
 	Piece p = get(sq);
-	chImpl->_board[squareTo0x88(sq)] = Piece();
+	chImpl->_board[Ox88.at((int)(sq))] = Piece();
 	if (p && p.type == KING) {
 		chImpl->_kings[p.color] = -1;
 	}
@@ -37,7 +37,7 @@ move Chess::undo() {
 
 std::string Chess::squareColor(Square sq) {
 	if (isValid8x8(sq)) {
-		int squ = squareTo0x88(sq);
+		int squ = Ox88.at((int)(sq));
 		return (rank(squ) + file(squ)) % 2 == 0 ? "light" : "dark";
 	}
 	return "";
@@ -96,23 +96,17 @@ move Chess::cmove(const moveOption& moveArg) {
 	return prettyMove;
 }
 
-int Chess::perft(int depth) {
-	if (depth < 0) {
-		throw std::invalid_argument("What the hell?");
-	}
-	const std::vector<InternalMove> moves = chImpl->_moves(false);
-	int nodes = 0;
-	Color c = chImpl->_turn;
+unsigned long long Chess::perft(int depth) {
+	if (depth == 1) return chImpl->_moves(true).size();
 
-	if (depth == 1) return static_cast<int>(moves.size());
-	if (depth == 0) return 1;
+	const auto moves = chImpl->_moves(false);
+	unsigned long long nodes = 0;
+	Color us = chImpl->_turn;
 
 	for (const auto& m : moves) {
 		chImpl->_makeMove(m);
-		if (!chImpl->_isKingAttacked(c))
+		if (!chImpl->_isKingAttacked(us))
 			nodes += perft(depth - 1);
-		else
-			nodes++;
 		chImpl->_undoMove();
 	}
 	return nodes;
@@ -159,7 +153,7 @@ std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> Chess::board() 
 	std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> output = {};
 	std::vector<std::tuple<Square, PieceSymbol, Color>> row = {};
 
-	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
+	for (int i = 0; i <= 119; i++) {
 		if (!chImpl->_board[i]) {
 			row.push_back({ EMPTY, PNONE, Color::NO_COLOR });
 		}
@@ -187,7 +181,7 @@ std::vector<std::vector<std::tuple<Square, PieceSymbol, Color>>> Chess::board() 
 }
 
 bool Chess::isAttacked(Square sq, Color attackedBy) {
-	return chImpl->_attacked(attackedBy, squareTo0x88(sq));
+	return chImpl->_attacked(attackedBy, Ox88.at((int)(sq)));
 }
 
 bool Chess::isCheck() {
@@ -213,7 +207,7 @@ bool Chess::inSufficientMaterial() {
 	std::vector<int> bishops = {};
 	int numPieces = 0;
 	int squareColor = 0;
-	for (int i = squareTo0x88(Square::a8); i <= squareTo0x88(Square::h1); i++) {
+	for (int i = 0; i <= 119; i++) {
 		squareColor = (squareColor + 1) % 2;
 		if (i & 0x88) {
 
