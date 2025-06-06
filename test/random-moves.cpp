@@ -1,4 +1,4 @@
-#include "chesscpp.h"
+#include "../include/chesscpp"
 #include <random>
 #include <thread>
 #include <chrono>
@@ -13,10 +13,10 @@ int main() {
 	while (!game.isGameOver()) {
 		system("cls");
 		std::cout << game.ascii() << '\n';
-		auto moves = game.moves();
+		auto moves = game.getMoves(true);
 		std::uniform_int_distribution<int> d(0, moves.size() - 1);
 		auto pickedMove = moves[d(rnd)];
-		game.cmove(pickedMove);
+		game.makeMove(pickedMove);
 		system("cls");
 		std::cout << game.ascii() << '\n';
 	}

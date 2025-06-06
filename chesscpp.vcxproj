@@ -80,8 +80,8 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -94,8 +94,8 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <Optimization>Disabled</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -137,18 +137,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\chesscpp.h" />
-    <ClInclude Include="include\exptypes.h" />
-    <ClInclude Include="include\cltypedefs.h" />
-    <ClInclude Include="src\pimpl.h" />
-    <ClInclude Include="src\privImpls.h" />
+    <ClInclude Include="include\chesscpp" />
+    <ClInclude Include="include\exptypes" />
+    <ClInclude Include="include\libtypes" />
+    <ClInclude Include="src\Helper.h" />
+    <ClInclude Include="src\InternalImpl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\general.cpp" />
-    <ClCompile Include="src\move.cpp" />
-    <ClCompile Include="src\pimpl.cpp" />
-    <ClCompile Include="src\privImpls.cpp" />
-    <ClCompile Include="test\position-test.cpp" />
+    <ClCompile Include="src\InternalImpl.cpp" />
+    <ClCompile Include="src\OtherImpls.cpp" />
+    <ClCompile Include="src\UserInterfaceImpl.cpp" />
+    <ClCompile Include="test\perft.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

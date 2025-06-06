@@ -19,32 +19,12 @@
 #include <array>
 #include <vector>
 #include <variant>
+#include <stdexcept>
 
-#include "exptypes.h"
+#include "exptypes"
 
 // Empty square
 #define EMPTY -1
-
-typedef struct InternalMove {
-    Color color;
-    int from;
-    int to;
-    PieceSymbol piece;
-    std::optional<PieceSymbol> captured;
-    std::optional<PieceSymbol> promotion;
-    int flags;
-} InternalMove;
-
-class History {
-public:
-    InternalMove move;
-    std::map<Color, int> kings;
-    Color turn;
-    std::map<Color, int> castling;
-    int epSquare;
-    int halfMoves;
-    int moveNumber;
-};
 
 const char FLAGS_NORMAL = 'n';
 const char FLAGS_CAPTURE = 'c';
@@ -61,6 +41,64 @@ const int BITS_EP_CAPTURE = 8;
 const int BITS_PROMOTION = 16;
 const int BITS_KSIDE_CASTLE = 32;
 const int BITS_QSIDE_CASTLE = 64;
+
+constexpr uint16_t CASTLE_WK = 1 << 5;   // 0x0020
+constexpr uint16_t CASTLE_WQ = 1 << 6;   // 0x0040
+constexpr uint16_t CASTLE_BK = 1 << 13;  // 0x2000
+constexpr uint16_t CASTLE_BQ = 1 << 14;  // 0x4000
+
+constexpr uint16_t CASTLE_KSIDE(Color c) { return (c == WHITE) ? CASTLE_WK : CASTLE_BK; }
+constexpr uint16_t CASTLE_QSIDE(Color c) { return (c == WHITE) ? CASTLE_WQ : CASTLE_BQ; }
+
+typedef struct InternalMove {
+    Color color;
+    int from;
+    int to;
+    PieceSymbol piece;
+    PieceSymbol captured;
+    PieceSymbol promotion;
+    int flags;
+
+    InternalMove() : color(Color::NONE), from(), to(),
+        piece(PieceSymbol::NONE), captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE) {}
+
+    InternalMove(Color c, int f, int t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
+                  PieceSymbol prom = PieceSymbol::NONE, int fl = BITS_NORMAL):
+        color(c), from(f), to(t), piece(p), captured(cp), promotion(prom), flags(fl) {}
+
+    inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
+} InternalMove;
+
+struct KingPositions {
+    int white = EMPTY;
+    int black = EMPTY;
+
+    inline int& operator[](Color c) {
+        switch (c) {
+        case Color::w: return white;
+        case Color::b: return black;
+        }
+        throw std::out_of_range("Invalid color");
+    }
+    inline int operator[](Color c) const {
+        switch (c) {
+        case Color::w: return white;
+        case Color::b: return black;
+        }
+        return -1;
+    }
+};
+
+class History {
+public:
+    InternalMove move;
+    KingPositions kings;
+    Color turn = Color::NONE;
+    uint16_t castling = 0;
+    int epSquare = -1;
+    int halfMoves;
+    int moveNumber;
+};
 
 const std::map<Color, std::vector<int>> PAWN_OFFSETS = {
     {Color::b, {16, 32, 17, 15}}, // Black pawn offsets
@@ -125,22 +163,6 @@ const std::unordered_map<PieceSymbol, int> PIECE_MASKS = {{PAWN, 0x1}, {KNIGHT, 
 const std::string SYMBOLS = "pnbrqkPNBRQK";
 
 const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
-
-struct RookPosition {
-    int square;
-    int flag;
-};
-
-const std::map<Color, std::vector<RookPosition>> ROOKS = {
-    {Color::w, {
-        {0, BITS_QSIDE_CASTLE},
-        {7, BITS_KSIDE_CASTLE}
-    }},
-    {Color::b, {
-        {56, BITS_QSIDE_CASTLE},
-        {63, BITS_KSIDE_CASTLE}
-    }}
-};
 
 const int RANK_1 = 7;
 const int RANK_2 = 6;

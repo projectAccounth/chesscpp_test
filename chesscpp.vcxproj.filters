@@ -27,6 +27,15 @@
     <ClCompile Include="src\general.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\InternalImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OtherImpls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UserInterfaceImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="test\perft.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -47,5 +56,16 @@
     <ClInclude Include="src\pimpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InternalImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\chesscpp" />
+    <None Include="include\exptypes" />
+    <None Include="include\libtypes" />
   </ItemGroup>
 </Project>

@@ -8,8 +8,9 @@
 #include <array>
 #include <vector>
 #include <variant>
+#include <cstdint>
 
-enum class Square : int {
+enum class Square : uint8_t {
     a8 = 0, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -17,13 +18,14 @@ enum class Square : int {
     a4, b4, c4, d4, e4, f4, g4, h4,
     a3, b3, c3, d3, e3, f3, g3, h3,
     a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1
+    a1, b1, c1, d1, e1, f1, g1, h1,
+    NONE = 65
 };
-enum class PieceSymbol : int {
-    p, n, b, r, q, k
+enum class PieceSymbol : int8_t {
+    p, n, b, r, q, k, NONE = -1
 };
-enum class Color {
-    w, b
+enum class Color : int8_t {
+    w, b, NONE = -1
 };
 
 // Default FEN
@@ -48,36 +50,58 @@ const std::array<std::string, 64> SQUARES = {
 #define QUEEN PieceSymbol::q
 #define KING PieceSymbol::k
 
-// Notation for white piece
 #define WHITE Color::w
-// Notation for black piece
 #define BLACK Color::b
 
 struct Piece {
+    Piece() : color(Color::NONE), type(PieceSymbol::NONE) {}
+    Piece(const Color& c, const PieceSymbol& pc) : color(c), type(pc) {}
     Color color;
     PieceSymbol type;
+    inline operator bool() const { return type != PieceSymbol::NONE && color != Color::NONE; }
 };
 
 typedef struct InternalMove InternalMove;
 
-typedef struct move {
+typedef struct Move {
     Color color;
     Square from;
     Square to;
-    std::optional<PieceSymbol> piece;
-    std::optional<PieceSymbol> captured;
-    std::optional<PieceSymbol> promotion;
+    PieceSymbol piece;
+    PieceSymbol captured;
+    PieceSymbol promotion;
     std::string flags;
     std::string san;
     std::string lan;
     std::string before;
     std::string after;
-} move;
 
-struct moveOption {
+    Move() : color(Color::NONE), from(Square::NONE), to(Square::NONE), piece(PieceSymbol::NONE),
+             captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE), flags(""), san(""),
+             lan(""), before(DEFAULT_POSITION), after(DEFAULT_POSITION) {}
+
+    Move(Color c, Square f, Square t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
+         PieceSymbol prom = PieceSymbol::NONE, std::string fl = "", std::string s = "",
+        std::string l = "", std::string b = DEFAULT_POSITION, std::string a = DEFAULT_POSITION)
+        : color(c), from(f), to(t), piece(p), captured(cp), promotion(prom),
+          flags(fl), san(s), lan(l), before(b), after(a) {}
+          
+    inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
+} Move;
+
+struct MoveOption {
     std::string from;
     std::string to;
     std::optional<std::string> promotion;
+};
+
+struct PerftStats {
+    int64_t nodes = 0;
+    int64_t captures = 0;
+    int64_t enPassants = 0;
+    int64_t castles = 0;
+    int64_t promotions = 0;
+    int64_t checks = 0;
 };
 
 #endif

@@ -1,5 +1,5 @@
 #pragma once
-#include "privImpls.h"
+#include "Helper.h"
 
 class Chess::chrImpl {
 private:
@@ -7,16 +7,17 @@ private:
 public:
 	chrImpl(Chess& c) : ch(c) {}
 
-	std::array<std::optional<Piece>, 128> _board;
+	KingPositions _kings;
+	std::array<Piece, 128> _board;
 	Color _turn = WHITE;
 	std::map<std::string, std::string> _header;
-	std::map<Color, int> _kings = { { WHITE, EMPTY }, { BLACK, EMPTY } };
 	int _epSquare = -1;
 	int _halfMoves = -1;
 	int _moveNumber = 0;
 	std::vector<History> _history;
 	std::map<std::string, std::string> _comments;
-	std::map<Color, int> _castling = { { WHITE, 0 }, { BLACK, 0 } };
+
+	uint16_t _castlings = 0;
 
 	std::map<std::string, std::optional<int>> _positionCount;
 
@@ -30,23 +31,23 @@ public:
 
 	bool _attacked(Color c, int sq);
 
-	std::vector<std::optional<PieceSymbol>> _getAttackingPiece(Color c, int sq);
+	std::vector<PieceSymbol> _getAttackingPiece(Color c, int sq);
 
 	bool _isKingAttacked(Color c);
 
-	std::vector<InternalMove> _moves(std::optional<bool> legal = true, std::optional<PieceSymbol> piece = std::nullopt, std::optional<std::string> sq = std::nullopt);
+	std::vector<InternalMove> _moves(const bool& legal = true, const PieceSymbol& piece = PieceSymbol::NONE, const std::string& sq = std::string());
 
-	void _push(InternalMove move);
+	void _push(const InternalMove& move);
 
-	void _makeMove(InternalMove move);
+	void _makeMove(const InternalMove& move);
 
-	std::optional<InternalMove> _undoMove();
+	InternalMove _undoMove();
 
 	std::string _moveToSan(InternalMove move, std::vector<InternalMove> moves);
 
 	std::optional<InternalMove> _moveFromSan(std::string move, bool strict = false);
 
-	move _makePretty(InternalMove uglyMove);
+	Move _makePretty(InternalMove uglyMove);
 
 	int _getPositionCount(std::string fen);
 

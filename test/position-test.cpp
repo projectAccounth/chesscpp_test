@@ -1,4 +1,4 @@
-#include "../include/chesscpp.h"
+#include "../include/chesscpp"
 #include <iostream>
 
 int main() {
@@ -15,11 +15,11 @@ int main() {
         std::string move;
         std::cin >> move;
         if (move == "undo") { if (hmf > 1) { game.undo(); hmf--; } continue; }
-        if (move == "next") { if (hmf > 0 && !moveHistory.empty()) { game.cmove(moveHistory[hmf - 1]); hmf++; } continue; }
+        if (move == "next") { if (hmf > 0 && !moveHistory.empty()) { game.makeMove(moveHistory[hmf - 1]); hmf++; } continue; }
         try {
-            auto m = game.cmove(move);
+            auto m = game.makeMove(move);
             moveHistory.push_back(move);
-            auto moves = game.moves();
+            auto moves = game.getMoves();
             hmf++;
         }
         catch (const std::exception& e) {
