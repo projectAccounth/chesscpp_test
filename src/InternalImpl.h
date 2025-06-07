@@ -1,6 +1,6 @@
 #pragma once
 #include "Helper.h"
-
+using namespace ChessCpp;
 class Chess::chrImpl {
 private:
 	Chess& ch;

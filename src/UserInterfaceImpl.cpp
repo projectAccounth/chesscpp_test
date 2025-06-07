@@ -1,5 +1,5 @@
 #include "InternalImpl.h"
-
+using namespace ChessCpp;
 // Front-end implementations for the exposed user interface
 
 void Chess::reset() {
@@ -478,18 +478,18 @@ void Chess::load(std::string fen, bool skipValidation, bool preserveHeaders) {
 	clear(preserveHeaders);
 
 	for (int i = 0; i < static_cast<int>(position.size()); i++) {
-		const std::string p = std::string(1, static_cast<char>(position.at(i)));
+		const char p = static_cast<char>(position.at(i));
 
-		if (p == "/") {
+		if (p == '/') {
 			squ += 8;
 		}
-		else if (Helper::isDigit(p)) {
-			squ += std::stoi(p);
+		else if (std::isdigit(p)) {
+			squ += p - '0';
 		}
 		else {
-			const Color color = p[0] < 'a' ? WHITE : BLACK;
+			const Color color = p < 'a' ? WHITE : BLACK;
 			try {
-				chImpl->_put(Helper::charToSymbol(std::tolower(p[0])), color, algebraic(squ));
+				chImpl->_put(Helper::charToSymbol(std::tolower(p)), color, algebraic(squ));
 			}
 			catch (const std::exception& e) {
 				std::cout << e.what() << '\n';
@@ -531,11 +531,11 @@ bool Chess::inCheck() {
 }
 
 bool Chess::isCheckmate() {
-	return isCheck() && chImpl->_moves().size() == 0;
+	return isCheck() && chImpl->_moves(true).size() == 0;
 }
 
 bool Chess::isStalemate() {
-	return !isCheck() && chImpl->_moves().size() == 0;
+	return !isCheck() && chImpl->_moves(true).size() == 0;
 }
 
 bool Chess::isDraw() {
@@ -591,7 +591,7 @@ std::vector<std::variant<std::string, Move>> Chess::history(bool verbose) {
 			moveHistory.push_back(chImpl->_makePretty(m.value()));
 		}
 		else {
-			moveHistory.push_back(chImpl->_moveToSan(m.value(), chImpl->_moves()));
+			moveHistory.push_back(chImpl->_moveToSan(m.value(), chImpl->_moves(true)));
 		}
 		chImpl->_makeMove(m.value());
 	}
@@ -648,7 +648,7 @@ Move Chess::makeMove(const std::variant<std::string, MoveOption>& moveArg, bool 
 		moveObj = chImpl->_moveFromSan(std::get<std::string>(moveArg), strict);
 	}
 	else {
-		std::vector<InternalMove> moves = chImpl->_moves();
+		std::vector<InternalMove> moves = chImpl->_moves(true);
 		MoveOption o = std::get<MoveOption>(moveArg);
 		Move m = {
 			chImpl->_turn,
@@ -673,8 +673,9 @@ Move Chess::makeMove(const std::variant<std::string, MoveOption>& moveArg, bool 
 	if (!moveObj) {
 		if (std::holds_alternative<std::string>(moveArg))
 			throw std::runtime_error("Invalid move: " + std::get<std::string>(moveArg));
-		else
+		else if (std::holds_alternative<MoveOption>(moveArg))
 			throw std::runtime_error("Invalid move: from " + std::get<MoveOption>(moveArg).from + "to " + std::get<MoveOption>(moveArg).to);
+		throw std::runtime_error("Invalid move");
 	}
 
 	Move prettyMove = chImpl->_makePretty(moveObj.value());
@@ -685,7 +686,11 @@ Move Chess::makeMove(const std::variant<std::string, MoveOption>& moveArg, bool 
 }
 
 Move Chess::makeMove(const Move& move) {
-	return makeMove(move.san, false);
+	return makeMove(MoveOption{
+		squareToString(move.from),
+		squareToString(move.to),
+		move.promotion == PieceSymbol::NONE ? std::nullopt : std::optional(std::string(1, Helper::pieceToChar(move.promotion)))
+	}, false);
 }
 
 void classifyMoveFlags(const InternalMove& move, PerftStats& stats) {
@@ -700,10 +705,10 @@ void classifyMoveFlags(const InternalMove& move, PerftStats& stats) {
 uint64_t Chess::perft(int depth) {
 	if (depth == 0) return 1;
 
-	const auto moves = chImpl->_moves(false);
+	const auto& moves = chImpl->_moves(false);
 	if (depth == 1) {
 		int count = 0;
-		Color c = chImpl->_turn;
+		const auto c = chImpl->_turn;
 		for (const auto& m : moves) {
 			chImpl->_makeMove(m);
 			if (!chImpl->_isKingAttacked(c))
@@ -714,7 +719,7 @@ uint64_t Chess::perft(int depth) {
 	}
 
 	uint64_t nodes = 0;
-	Color c = chImpl->_turn;
+	const auto c = chImpl->_turn;
 	for (const auto& m : moves) {
 		chImpl->_makeMove(m);
 		if (!chImpl->_isKingAttacked(c))

@@ -1,36 +1,35 @@
 #include "Helper.h"
 
+using namespace ChessCpp;
+
 bool operator<(Square lhs, Square rhs) {
 	return static_cast<int>(lhs) < static_cast<int>(rhs);
 }
 
-int rank(int square) {
+int ChessCpp::rank(int square) {
 	return square >> 4;
 }
 
-int file(int square) {
+int ChessCpp::file(int square) {
 	return square & 0xf;
 }
 
-Square stringToSquare(const std::string& squareStr) {
+Square ChessCpp::stringToSquare(const std::string& squareStr) {
 	return static_cast<Square>(('8' - squareStr[1]) * 8 + (squareStr[0] - 'a'));
 }
 
-std::string squareToString(const Square& sq) {
+std::string ChessCpp::squareToString(const Square& sq) {
 	return SQUARES[static_cast<unsigned int>(sq)];
 }
 
-Square algebraic(int square) {
-	return stringToSquare(
-		std::string(1, static_cast<char>(std::string("abcdefgh")[file(square)])) +
-		std::string(1, static_cast<char>(std::string("87654321")[rank(square)]))
+Square ChessCpp::algebraic(int square) {
+	return ChessCpp::stringToSquare(
+		std::string(1, static_cast<char>(std::string("abcdefgh")[ChessCpp::file(square)])) +
+		std::string(1, static_cast<char>(std::string("87654321")[ChessCpp::rank(square)]))
 	);
 }
 
-Color swapColor(Color color) {
-	return color == WHITE ? BLACK : WHITE;
-}
-std::pair<bool, std::string> validateFen(std::string fen) {
+std::pair<bool, std::string> ChessCpp::validateFen(std::string fen) {
 	const std::vector<std::string> tokens = Helper::splitWithRegex(fen, R"(\s+)");
 	if (tokens.size() != 6) {
 		return { false, "Invalid FEN" };

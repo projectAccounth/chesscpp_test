@@ -15,6 +15,8 @@
 #include <iterator>
 #include <iostream>
 
+using namespace ChessCpp;
+
 bool operator<(Square lhs, Square rhs);
 
 class Helper {

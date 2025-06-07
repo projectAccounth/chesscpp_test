@@ -19,217 +19,217 @@
 #include <utility>
 
 #include "exptypes"
+namespace ChessCpp {
+	/// Used to validate strings for FEN notation.
+	/// @return A boolean that indicates whether the FEN is valid or not, and a string for the error message.
+	std::pair<bool, std::string> validateFen(std::string fen);
 
-/// Used to validate strings for FEN notation.
-/// @return A boolean that indicates whether the FEN is valid or not, and a string for the error message.
-std::pair<bool, std::string> validateFen(std::string fen);
+	/// File of an 0x88 square.
+	/// @return the file of the square, from 0 to 7. (A-H)
+	int file(int square);
 
-/// File of an 0x88 square.
-/// @return the file of the square, from 0 to 7. (A-H)
-int file(int square);
+	/// Rank of an 0x88 square.
+	/// @return the rank of the square, from 0 to 7.
+	int rank(int square);
 
-/// Rank of an 0x88 square.
-/// @return the rank of the square, from 0 to 7.
-int rank(int square);
+	/// Convert a string to a square (the type).
+	/// @param squareStr The string to convert.
+	Square stringToSquare(const std::string& squareStr);
 
-/// Convert a string to a square (the type).
-/// @param squareStr The string to convert.
-Square stringToSquare(const std::string& squareStr);
+	/// Convert a square to a string (algebraic notation).
+	/// @param sq The square to convert.
+	std::string squareToString(const Square& sq);
 
-/// Convert a square to a string (algebraic notation).
-/// @param sq The square to convert.
-std::string squareToString(const Square& sq);
+	/// Convert a square to algebraic notation.
+	/// @param square The square to convert.
+	Square algebraic(int square);
 
-/// Convert a square to algebraic notation.
-/// @param square The square to convert.
-Square algebraic(int square);
+	class Chess {
+	private:	
+		class chrImpl;
+		chrImpl* chImpl;
+	public:
+		/// @brief Clears the current board and resets the game state.
+		/// @param preserveHeaders If true, the headers will be preserved. If false, the headers will be cleared.
+		void clear(std::optional<bool> preserveHeaders);
 
-class Chess {
-private:	
-	class chrImpl;
-	chrImpl* chImpl;
-public:
-	/// @brief Clears the current board and resets the game state.
-	/// @param preserveHeaders If true, the headers will be preserved. If false, the headers will be cleared.
-	void clear(std::optional<bool> preserveHeaders);
+		/// @brief Removes a header with the specified key.
+		/// @param key The key of the header to remove.
+		void removeHeader(std::string key);
+		
+		/// @brief Loads a FEN string into the chessboard.
+		/// @param fen The FEN string to load.
+		/// @param skipValidation If true, the FEN will be loaded without validation. If false, the FEN will be validated.
+		/// @param preserveHeaders If true, the headers will be preserved. If false, the headers will be cleared.
+		void load(std::string fen, bool skipValidation = false, bool preserveHeaders = false);
 
-	/// @brief Removes a header with the specified key.
-	/// @param key The key of the header to remove.
-	void removeHeader(std::string key);
-	
-	/// @brief Loads a FEN string into the chessboard.
-	/// @param fen The FEN string to load.
-	/// @param skipValidation If true, the FEN will be loaded without validation. If false, the FEN will be validated.
-	/// @param preserveHeaders If true, the headers will be preserved. If false, the headers will be cleared.
-	void load(std::string fen, bool skipValidation = false, bool preserveHeaders = false);
+		// Constructor, with optional FEN.
+		Chess(std::string fen);
 
-	// Constructor, with optional FEN.
-	Chess(std::string fen);
+		// Default constructor, default FEN is loaded.
+		Chess();
 
-	// Default constructor, default FEN is loaded.
-	Chess();
+		/// @brief Returns the current FEN of the chessboard.
+		/// @return The current FEN of the chessboard.
+		std::string fen();
 
-	/// @brief Returns the current FEN of the chessboard.
-	/// @return The current FEN of the chessboard.
-	std::string fen();
+		/// @brief Resets the game state.
+		void reset();
 
-	/// @brief Resets the game state.
-	void reset();
+		/// @brief Gets the piece on the specified square.
+		/// @param sq The square to get the piece from.
+		/// @return The piece on the specified square, or an empty piece (evaluates to false) if no piece is present.
+		Piece get(Square sq);
 
-	/// @brief Gets the piece on the specified square.
-	/// @param sq The square to get the piece from.
-	/// @return The piece on the specified square, or an empty piece (evaluates to false) if no piece is present.
-	Piece get(Square sq);
+		/// @brief Puts a piece on the specified square.
+		/// @param type The type of the piece to put.
+		/// @param c The color of the piece to put.
+		/// @param sq The square to put the piece on.
+		bool put(PieceSymbol type, Color c, Square sq);
 
-	/// @brief Puts a piece on the specified square.
-	/// @param type The type of the piece to put.
-	/// @param c The color of the piece to put.
-	/// @param sq The square to put the piece on.
-	bool put(PieceSymbol type, Color c, Square sq);
+		/// @brief Removes a piece from the specified square.
+		/// @param sq The square to remove the piece from.
+		/// @return The removed piece, or an empty piece if no piece was present on the square.
+		std::optional<Piece> remove(Square sq);
 
-	/// @brief Removes a piece from the specified square.
-	/// @param sq The square to remove the piece from.
-	/// @return The removed piece, or an empty piece if no piece was present on the square.
-	std::optional<Piece> remove(Square sq);
+		/// @brief Checks if the specified square is attacked by the specified color.
+		/// @param sq The square to check.
+		/// @param attackedBy The color to check if the square is attacked by.
+		/// @return True if the square is attacked by the specified color, false otherwise.
+		bool isAttacked(Square sq, Color attackedBy);
 
-	/// @brief Checks if the specified square is attacked by the specified color.
-	/// @param sq The square to check.
-	/// @param attackedBy The color to check if the square is attacked by.
-	/// @return True if the square is attacked by the specified color, false otherwise.
-	bool isAttacked(Square sq, Color attackedBy);
+		/// Returns a value that indicates whether the position is in check.
+		/// This is an alias of inCheck().
+		/// @return True if the position is in check, false otherwise.
+		/// @note This function checks if the current player's king is under attack.
+		bool isCheck();
 
-	/// Returns a value that indicates whether the position is in check.
-	/// This is an alias of inCheck().
-	/// @return True if the position is in check, false otherwise.
-	/// @note This function checks if the current player's king is under attack.
-	bool isCheck();
+		/// Returns a value that indicates whether the position is in check.
+		/// This is an alias of isCheck().
+		/// @return True if the position is in check, false otherwise.
+		bool inCheck();
+		
+		/// @brief Returns a value that indicates whether the position is in checkmate.
+		/// @return True if the position is in checkmate, false otherwise.
+		bool isCheckmate();
 
-	/// Returns a value that indicates whether the position is in check.
-	/// This is an alias of isCheck().
-	/// @return True if the position is in check, false otherwise.
-	bool inCheck();
-	
-	/// @brief Returns a value that indicates whether the position is in checkmate.
-	/// @return True if the position is in checkmate, false otherwise.
-	bool isCheckmate();
+		/// Returns a value that indicates whether the position is in stalemate.
+		/// @return True if the position is in stalemate, false otherwise.
+		bool isStalemate();
 
-	/// Returns a value that indicates whether the position is in stalemate.
-	/// @return True if the position is in stalemate, false otherwise.
-	bool isStalemate();
+		/// Returns a value that indicates whether the position is in insufficient material.
+		/// This checks if the position has insufficient material to checkmate the opponent.
+		/// @return True if the position is in insufficient material, false otherwise.
+		/// @note This function checks if the position has only kings, or a king and a bishop, or a king and a knight, or whatever.
+		bool inSufficientMaterial();
 
-	/// Returns a value that indicates whether the position is in insufficient material.
-	/// This checks if the position has insufficient material to checkmate the opponent.
-	/// @return True if the position is in insufficient material, false otherwise.
-	/// @note This function checks if the position has only kings, or a king and a bishop, or a king and a knight, or whatever.
-	bool inSufficientMaterial();
+		/// Returns a value that indicates whether the position is in threefold repetition.
+		/// This checks if the position has been repeated three times.
+		bool isThreefoldRepetition();
 
-	/// Returns a value that indicates whether the position is in threefold repetition.
-	/// This checks if the position has been repeated three times.
-	bool isThreefoldRepetition();
+		// Returns a value that indicates whether the game is drawn.
+		bool isDraw();
 
-	// Returns a value that indicates whether the game is drawn.
-	bool isDraw();
+		// Returns a value that indicates whether the game is over or not.
+		bool isGameOver();
 
-	// Returns a value that indicates whether the game is over or not.
-	bool isGameOver();
+		// Returns all available moves.
+		std::vector<std::string> getMoves();
 
-	// Returns all available moves.
-	std::vector<std::string> getMoves();
+		// Returns the list of moves on a square/of a piece (optional)
+		std::vector<Move> getMoves(bool verbose, std::string sq = "", PieceSymbol piece = PieceSymbol::NONE);
 
-	// Returns the list of moves on a square/of a piece (optional)
-	std::vector<Move> getMoves(bool verbose, std::string sq = "", PieceSymbol piece = PieceSymbol::NONE);
+		/*
+		* Moves the specified piece to a specific position on the board.
+		* 
+		* Parameters:
+		* moveArg - variant<string, moveOption>
+		* 
+		* 
+		* moveOption: { string from, string to, optional<string> promotion }
+		* from - to: Square to move from and to.
+		* promotion: Promoting to a specific piece (in case of a pawn promotion move)
+		* 
+		* string: Move using SAN notation.
+		* 
+		* Raises an exception on a fail move.
+		*/
+		Move makeMove(const std::variant<std::string, MoveOption>& moveArg, bool strict = false);
+		Move makeMove(const Move& move);
+		
+		// Undos a move.
+		std::optional<Move> undo();
+		
+		// Gets the current PGN of the game. Does not include results of the game.
+		std::string pgn(char newline = '\n', int maxWidth = 0);
+		
+		std::map<std::string, std::string> header(std::vector<std::string> args ...);
+		
+		/*
+		* Loads the specified PGN.
+		* 
+		* Parameters:
+		* 
+		* pgn: string : The PGN to load.
+		* 
+		* strict: bool : Enables the strict parser.
+		* 
+		* newline: string : the newline character. Should be kept default.
+		*/ 
+		void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\\r?\\n");
+		
+		// Returns the current chessboard in ASCII, in White's perspective by default. Recommended for debugging or console-based chess games.
+		std::string ascii(bool isWhitePersp = true);
 
-	/*
-	* Moves the specified piece to a specific position on the board.
-	* 
-	* Parameters:
-	* moveArg - variant<string, moveOption>
-	* 
-	* 
-	* moveOption: { string from, string to, optional<string> promotion }
-	* from - to: Square to move from and to.
-	* promotion: Promoting to a specific piece (in case of a pawn promotion move)
-	* 
-	* string: Move using SAN notation.
-	* 
-	* Raises an exception on a fail move.
-	*/
-	Move makeMove(const std::variant<std::string, MoveOption>& moveArg, bool strict = false);
-	Move makeMove(const Move& move);
-	
-	// Undos a move.
-	std::optional<Move> undo();
-	
-	// Gets the current PGN of the game. Does not include results of the game.
-	std::string pgn(char newline = '\n', int maxWidth = 0);
-	
-	std::map<std::string, std::string> header(std::vector<std::string> args ...);
-	
-	/*
-	* Loads the specified PGN.
-	* 
-	* Parameters:
-	* 
-	* pgn: string : The PGN to load.
-	* 
-	* strict: bool : Enables the strict parser.
-	* 
-	* newline: string : the newline character. Should be kept default.
-	*/ 
-	void loadPgn(std::string pgn, bool strict = false, std::string newlineChr = "\\r?\\n");
-	
-	// Returns the current chessboard in ASCII, in White's perspective by default. Recommended for debugging or console-based chess games.
-	std::string ascii(bool isWhitePersp = true);
+		/// PERFT. Used for testing and analysis.
+		/// @param depth The depth to search to.
+		uint64_t perft(int depth);
 
-	/// PERFT. Used for testing and analysis.
-	/// @param depth The depth to search to.
-	uint64_t perft(int depth);
+		// Returns the current turn, Black or White.
+		Color turn();
 
-	// Returns the current turn, Black or White.
-	Color turn();
+		// Returns the current board. Useful for analysis.
+		std::vector<std::vector<std::optional<std::tuple<Square, PieceSymbol, Color>>>> board();
 
-	// Returns the current board. Useful for analysis.
-	std::vector<std::vector<std::optional<std::tuple<Square, PieceSymbol, Color>>>> board();
+		// Returns the current square color of the specified square. Either "light" or "dark" is returned.
+		std::optional<std::string> squareColor(Square sq);
 
-	// Returns the current square color of the specified square. Either "light" or "dark" is returned.
-	std::optional<std::string> squareColor(Square sq);
+		// Returns the history of the board, in the form of a string array.
+		std::vector<std::string> history_s();
+		
+		// Returns the history of the board. If verbose = true, returns an array of moves. Otherwise, an array of string is returned (array of moves).
+		std::vector<std::variant<std::string, Move>> history(bool verbose);
+		
+		// Returns the history of the board, in the form of a move array.
+		std::vector<Move> history_m();
 
-	// Returns the history of the board, in the form of a string array.
-	std::vector<std::string> history_s();
-	
-	// Returns the history of the board. If verbose = true, returns an array of moves. Otherwise, an array of string is returned (array of moves).
-	std::vector<std::variant<std::string, Move>> history(bool verbose);
-	
-	// Returns the history of the board, in the form of a move array.
-	std::vector<Move> history_m();
+		// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
+		std::pair<bool, bool> getCastlingRights(Color color);
 
-	// Returns a pair of booleans that indicates the rights to castle. First element is for king-side castle, second element is for queen-side.
-	std::pair<bool, bool> getCastlingRights(Color color);
+		// Returns the current move number, in full moves.
+		int moveNumber();
 
-	// Returns the current move number, in full moves.
-	int moveNumber();
+		std::vector<PieceSymbol> getAttackingPieces(Color c, Square sq);
 
-	std::vector<PieceSymbol> getAttackingPieces(Color c, Square sq);
+		/// ----------- WIP SECTION, NOT FOR USE ----------- ///
+		std::string getComment();
 
-	/// ----------- WIP SECTION, NOT FOR USE ----------- ///
-	std::string getComment();
+		std::string deleteComment();
 
-	std::string deleteComment();
+		std::string setComment(const std::string& comment);
 
-	std::string setComment(const std::string& comment);
+		std::vector<std::pair<std::string, std::string>> getComments();
 
-	std::vector<std::pair<std::string, std::string>> getComments();
-
-	std::vector<std::pair<std::string, std::string>> deleteComments();
+		std::vector<std::pair<std::string, std::string>> deleteComments();
 
 
-	/// Sets the castling rights for the specified color.
-	/// @param c The color to set the castling rights for.
-	/// @note Unless you know what you are actually doing, you should not use this function.
-	/// @param rights A pair of PieceSymbol and bool, where PieceSymbol is the type of the piece that can castle, and bool indicates whether the castling is allowed or not.
-	bool setCastlingRights(const Color& c, std::optional<std::pair<PieceSymbol, bool>> rights);
+		/// Sets the castling rights for the specified color.
+		/// @param c The color to set the castling rights for.
+		/// @note Unless you know what you are actually doing, you should not use this function.
+		/// @param rights A pair of PieceSymbol and bool, where PieceSymbol is the type of the piece that can castle, and bool indicates whether the castling is allowed or not.
+		bool setCastlingRights(const Color c, std::optional<std::pair<PieceSymbol, bool>> rights);
 
-	~Chess();
+		~Chess();
+	};
 };
-
 #endif

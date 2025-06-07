@@ -8,9 +8,10 @@ int main() {
 	std::random_device rd;
 	std::mt19937 rnd(rd());
 
-	Chess game = Chess();
+	ChessCpp::Chess game = ChessCpp::Chess("8/P7/8/8/8/5k2/2K5/8 w - - 0 1");
+	auto ms = game.getMoves(true);
 
-	while (!game.isGameOver()) {
+	while (!game.isCheckmate()) {
 		system("cls");
 		std::cout << game.ascii() << '\n';
 		auto moves = game.getMoves(true);

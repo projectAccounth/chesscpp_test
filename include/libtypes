@@ -23,97 +23,98 @@
 
 #include "exptypes"
 
-// Empty square
-#define EMPTY -1
+namespace ChessCpp {
+    // Empty square
+   const int EMPTY = -1;
 
-const char FLAGS_NORMAL = 'n';
-const char FLAGS_CAPTURE = 'c';
-const char FLAGS_BIG_PAWN = 'b';
-const char FLAGS_EP_CAPTURE = 'e';
-const char FLAGS_PROMOTION = 'p';
-const char FLAGS_KSIDE_CASTLE = 'k';
-const char FLAGS_QSIDE_CASTLE = 'q';
+    const char FLAGS_NORMAL = 'n';
+    const char FLAGS_CAPTURE = 'c';
+    const char FLAGS_BIG_PAWN = 'b';
+    const char FLAGS_EP_CAPTURE = 'e';
+    const char FLAGS_PROMOTION = 'p';
+    const char FLAGS_KSIDE_CASTLE = 'k';
+    const char FLAGS_QSIDE_CASTLE = 'q';
 
-const int BITS_NORMAL = 1;
-const int BITS_CAPTURE = 2;
-const int BITS_BIG_PAWN = 4;
-const int BITS_EP_CAPTURE = 8;
-const int BITS_PROMOTION = 16;
-const int BITS_KSIDE_CASTLE = 32;
-const int BITS_QSIDE_CASTLE = 64;
+    const int BITS_NORMAL = 1;
+    const int BITS_CAPTURE = 2;
+    const int BITS_BIG_PAWN = 4;
+    const int BITS_EP_CAPTURE = 8;
+    const int BITS_PROMOTION = 16;
+    const int BITS_KSIDE_CASTLE = 32;
+    const int BITS_QSIDE_CASTLE = 64;
 
-constexpr uint16_t CASTLE_WK = 1 << 5;   // 0x0020
-constexpr uint16_t CASTLE_WQ = 1 << 6;   // 0x0040
-constexpr uint16_t CASTLE_BK = 1 << 13;  // 0x2000
-constexpr uint16_t CASTLE_BQ = 1 << 14;  // 0x4000
+    constexpr uint16_t CASTLE_WK = 1 << 5;   // 0x0020
+    constexpr uint16_t CASTLE_WQ = 1 << 6;   // 0x0040
+    constexpr uint16_t CASTLE_BK = 1 << 13;  // 0x2000
+    constexpr uint16_t CASTLE_BQ = 1 << 14;  // 0x4000
 
-constexpr uint16_t CASTLE_KSIDE(Color c) { return (c == WHITE) ? CASTLE_WK : CASTLE_BK; }
-constexpr uint16_t CASTLE_QSIDE(Color c) { return (c == WHITE) ? CASTLE_WQ : CASTLE_BQ; }
+    constexpr uint16_t CASTLE_KSIDE(Color c) { return (c == WHITE) ? CASTLE_WK : CASTLE_BK; }
+    constexpr uint16_t CASTLE_QSIDE(Color c) { return (c == WHITE) ? CASTLE_WQ : CASTLE_BQ; }
 
-typedef struct InternalMove {
-    Color color;
-    int from;
-    int to;
-    PieceSymbol piece;
-    PieceSymbol captured;
-    PieceSymbol promotion;
-    int flags;
+    typedef struct InternalMove {
+        Color color;
+        int from;
+        int to;
+        PieceSymbol piece;
+        PieceSymbol captured;
+        PieceSymbol promotion;
+        int flags;
 
-    InternalMove() : color(Color::NONE), from(), to(),
-        piece(PieceSymbol::NONE), captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE) {}
+        InternalMove() : color(Color::NONE), from(), to(), flags(),
+            piece(PieceSymbol::NONE), captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE) {}
 
-    InternalMove(Color c, int f, int t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
-                  PieceSymbol prom = PieceSymbol::NONE, int fl = BITS_NORMAL):
-        color(c), from(f), to(t), piece(p), captured(cp), promotion(prom), flags(fl) {}
+        InternalMove(Color c, int f, int t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
+                    PieceSymbol prom = PieceSymbol::NONE, int fl = BITS_NORMAL):
+            color(c), from(f), to(t), piece(p), captured(cp), promotion(prom), flags(fl) {}
 
-    inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
-} InternalMove;
+        inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
+    } InternalMove;
 
-struct KingPositions {
-    int white = EMPTY;
-    int black = EMPTY;
+    struct KingPositions {
+        int white = EMPTY;
+        int black = EMPTY;
 
-    inline int& operator[](Color c) {
-        switch (c) {
-        case Color::w: return white;
-        case Color::b: return black;
+        inline int& operator[](Color c) {
+            switch (c) {
+            case Color::w: return white;
+            case Color::b: return black;
+            }
+            throw std::out_of_range("Invalid color");
         }
-        throw std::out_of_range("Invalid color");
-    }
-    inline int operator[](Color c) const {
-        switch (c) {
-        case Color::w: return white;
-        case Color::b: return black;
+        inline int operator[](Color c) const {
+            switch (c) {
+            case Color::w: return white;
+            case Color::b: return black;
+            }
+            return -1;
         }
-        return -1;
-    }
-};
+    };
 
-class History {
-public:
-    InternalMove move;
-    KingPositions kings;
-    Color turn = Color::NONE;
-    uint16_t castling = 0;
-    int epSquare = -1;
-    int halfMoves;
-    int moveNumber;
-};
+    class History {
+    public:
+        InternalMove move;
+        KingPositions kings;
+        Color turn = Color::NONE;
+        uint16_t castling = 0;
+        int epSquare = -1;
+        int halfMoves;
+        int moveNumber;
+    };
 
-const std::map<Color, std::vector<int>> PAWN_OFFSETS = {
-    {Color::b, {16, 32, 17, 15}}, // Black pawn offsets
-    {Color::w, {-16, -32, -17, -15}} // White pawn offsets
-};
+    const std::map<Color, std::vector<int>> PAWN_OFFSETS = {
+        {Color::b, {16, 32, 17, 15}}, // Black pawn offsets
+        {Color::w, {-16, -32, -17, -15}} // White pawn offsets
+    };
 
-const std::map<PieceSymbol, std::vector<int>> PIECE_OFFSETS = {
-    {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
-    {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
-    {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
-    {QUEEN, {-17, -16, -15, 1, 17, 16, 15, -1}},   // Queen offsets
-    {KING, {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
-};
-const std::vector<int> ATTACKS = {
-    20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20, 0,
+    const std::map<PieceSymbol, std::vector<int>> PIECE_OFFSETS = {
+        {KNIGHT, {-18, -33, -31, -14, 18, 33, 31, 14}}, // Knight offsets
+        {BISHOP, {-17, -15, 17, 15}},                  // Bishop offsets
+        {ROOK, {-16, 1, 16, -1}},                    // Rook offsets
+        {QUEEN, {-17, -16, -15, 1, 17, 16, 15, -1}},   // Queen offsets
+        {KING, {-17, -16, -15, 1, 17, 16, 15, -1}}    // King offsets
+    };
+    const std::vector<int> ATTACKS = {
+        20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20, 0,
         0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
         0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
         0, 0, 0, 20, 0, 0, 0, 24, 0, 0, 0, 20, 0, 0, 0, 0,
@@ -128,52 +129,59 @@ const std::vector<int> ATTACKS = {
         0, 0, 20, 0, 0, 0, 0, 24, 0, 0, 0, 0, 20, 0, 0, 0,
         0, 20, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 20, 0, 0,
         20, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 20
-};
+    };
 
-const std::vector<int> RAYS = {
-    17, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 15, 0,
-        0, 17, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 15, 0, 0,
-        0, 0, 17, 0, 0, 0, 0, 16, 0, 0, 0, 0, 15, 0, 0, 0,
-        0, 0, 0, 17, 0, 0, 0, 16, 0, 0, 0, 15, 0, 0, 0, 0,
-        0, 0, 0, 0, 17, 0, 0, 16, 0, 0, 15, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 17, 0, 16, 0, 15, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 17, 16, 15, 0, 0, 0, 0, 0, 0, 0,
-        1, 1, 1, 1, 1, 1, 1, 0, -1, -1, -1, -1, -1, -1, -1, 0,
-        0, 0, 0, 0, 0, 0, -15, -16, -17, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, -15, 0, -16, 0, -17, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, -15, 0, 0, -16, 0, 0, -17, 0, 0, 0, 0, 0,
-        0, 0, 0, -15, 0, 0, 0, -16, 0, 0, 0, -17, 0, 0, 0, 0,
-        0, 0, -15, 0, 0, 0, 0, -16, 0, 0, 0, 0, -17, 0, 0, 0,
-        0, -15, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, -17, 0, 0,
-        -15, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, 0, -17
-};
+    const std::vector<int> RAYS = {
+        17, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 15, 0,
+            0, 17, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 15, 0, 0,
+            0, 0, 17, 0, 0, 0, 0, 16, 0, 0, 0, 0, 15, 0, 0, 0,
+            0, 0, 0, 17, 0, 0, 0, 16, 0, 0, 0, 15, 0, 0, 0, 0,
+            0, 0, 0, 0, 17, 0, 0, 16, 0, 0, 15, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 17, 0, 16, 0, 15, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 17, 16, 15, 0, 0, 0, 0, 0, 0, 0,
+            1, 1, 1, 1, 1, 1, 1, 0, -1, -1, -1, -1, -1, -1, -1, 0,
+            0, 0, 0, 0, 0, 0, -15, -16, -17, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, -15, 0, -16, 0, -17, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, -15, 0, 0, -16, 0, 0, -17, 0, 0, 0, 0, 0,
+            0, 0, 0, -15, 0, 0, 0, -16, 0, 0, 0, -17, 0, 0, 0, 0,
+            0, 0, -15, 0, 0, 0, 0, -16, 0, 0, 0, 0, -17, 0, 0, 0,
+            0, -15, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, -17, 0, 0,
+            -15, 0, 0, 0, 0, 0, 0, -16, 0, 0, 0, 0, 0, 0, -17
+    };
 
-const std::array<int, 64> Ox88 = {
-    0, 1, 2, 3, 4, 5, 6, 7,
-    16, 17, 18, 19, 20, 21, 22, 23,
-    32, 33, 34, 35, 36, 37, 38, 39,
-    48, 49, 50, 51, 52, 53, 54, 55,
-    64, 65, 66, 67, 68, 69, 70, 71,
-    80, 81, 82, 83, 84, 85, 86, 87,
-    96, 97, 98, 99, 100, 101, 102, 103,
-    112, 113, 114, 115, 116, 117, 118, 119
-};
-const std::unordered_map<PieceSymbol, int> PIECE_MASKS = {{PAWN, 0x1}, {KNIGHT, 0x2}, {BISHOP, 0x4}, {ROOK, 0x8}, {QUEEN, 0x10}, {KING, 0x20}};
+    const std::array<int, 64> Ox88 = {
+        0, 1, 2, 3, 4, 5, 6, 7,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        32, 33, 34, 35, 36, 37, 38, 39,
+        48, 49, 50, 51, 52, 53, 54, 55,
+        64, 65, 66, 67, 68, 69, 70, 71,
+        80, 81, 82, 83, 84, 85, 86, 87,
+        96, 97, 98, 99, 100, 101, 102, 103,
+        112, 113, 114, 115, 116, 117, 118, 119
+    };
 
-const std::string SYMBOLS = "pnbrqkPNBRQK";
+    constexpr int getPieceMask(PieceSymbol piece) {
+        switch (piece) {
+        case PAWN:   return 0x1;
+        case KNIGHT: return 0x2;
+        case BISHOP: return 0x4;
+        case ROOK:   return 0x8;
+        case QUEEN:  return 0x10;
+        case KING:   return 0x20;
+        default:     return 0;
+        }
+    }
 
-const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
+    const std::string SYMBOLS = "pnbrqkPNBRQK";
 
-const int RANK_1 = 7;
-const int RANK_2 = 6;
+    const std::array<PieceSymbol, 4> PROMOTIONS = { KNIGHT, BISHOP, ROOK, QUEEN };
 
-const int RANK_7 = 1;
-const int RANK_8 = 0;
+    const int RANK_1 = 7;
+    const int RANK_2 = 6;
 
-const std::vector<std::string> TERMINATION_MARKERS = { "1-0", "0-1", "1/2-1/2", "*" };
+    const int RANK_7 = 1;
+    const int RANK_8 = 0;
 
-const std::map<Color, int> SECOND_RANK = {
-    {Color::w, RANK_2}, {Color::b, RANK_7}
-};
-
+    const std::vector<std::string> TERMINATION_MARKERS = { "1-0", "0-1", "1/2-1/2", "*" };
+}
 #endif

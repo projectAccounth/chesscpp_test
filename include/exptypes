@@ -10,98 +10,101 @@
 #include <variant>
 #include <cstdint>
 
-enum class Square : uint8_t {
-    a8 = 0, b8, c8, d8, e8, f8, g8, h8,
-    a7, b7, c7, d7, e7, f7, g7, h7,
-    a6, b6, c6, d6, e6, f6, g6, h6,
-    a5, b5, c5, d5, e5, f5, g5, h5,
-    a4, b4, c4, d4, e4, f4, g4, h4,
-    a3, b3, c3, d3, e3, f3, g3, h3,
-    a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1,
-    NONE = 65
-};
-enum class PieceSymbol : int8_t {
-    p, n, b, r, q, k, NONE = -1
-};
-enum class Color : int8_t {
-    w, b, NONE = -1
-};
+namespace ChessCpp {
 
-// Default FEN
-const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    enum class Square : uint8_t {
+        a8 = 0, b8, c8, d8, e8, f8, g8, h8,
+        a7, b7, c7, d7, e7, f7, g7, h7,
+        a6, b6, c6, d6, e6, f6, g6, h6,
+        a5, b5, c5, d5, e5, f5, g5, h5,
+        a4, b4, c4, d4, e4, f4, g4, h4,
+        a3, b3, c3, d3, e3, f3, g3, h3,
+        a2, b2, c2, d2, e2, f2, g2, h2,
+        a1, b1, c1, d1, e1, f1, g1, h1,
+        NONE = 65
+    };
+    enum class PieceSymbol : int8_t {
+        p, n, b, r, q, k, NONE = -1
+    };
+    enum class Color : int8_t {
+        w, b, NONE = -1
+    };
 
-// Squares as strings, what is this even used for
-const std::array<std::string, 64> SQUARES = {
-    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
-};
+    // Default FEN
+    const std::string DEFAULT_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-#define PAWN PieceSymbol::p
-#define ROOK PieceSymbol::r
-#define KNIGHT PieceSymbol::n
-#define BISHOP PieceSymbol::b
-#define QUEEN PieceSymbol::q
-#define KING PieceSymbol::k
+    // Squares as strings, what is this even used for
+    const std::array<std::string, 64> SQUARES = {
+        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
+    };
 
-#define WHITE Color::w
-#define BLACK Color::b
+    const auto PAWN = PieceSymbol::p;
+    const auto ROOK = PieceSymbol::r;
+    const auto KNIGHT = PieceSymbol::n;
+    const auto BISHOP = PieceSymbol::b;
+    const auto QUEEN = PieceSymbol::q;
+    const auto KING = PieceSymbol::k;
 
-struct Piece {
-    Piece() : color(Color::NONE), type(PieceSymbol::NONE) {}
-    Piece(const Color& c, const PieceSymbol& pc) : color(c), type(pc) {}
-    Color color;
-    PieceSymbol type;
-    inline operator bool() const { return type != PieceSymbol::NONE && color != Color::NONE; }
-};
+    const auto WHITE = Color::w;
+    const auto BLACK = Color::b;
 
-typedef struct InternalMove InternalMove;
+    struct Piece {
+        Piece() : color(Color::NONE), type(PieceSymbol::NONE) {}
+        Piece(const Color c, const PieceSymbol& pc) : color(c), type(pc) {}
+        Color color;
+        PieceSymbol type;
+        inline operator bool() const { return type != PieceSymbol::NONE && color != Color::NONE; }
+    };
 
-typedef struct Move {
-    Color color;
-    Square from;
-    Square to;
-    PieceSymbol piece;
-    PieceSymbol captured;
-    PieceSymbol promotion;
-    std::string flags;
-    std::string san;
-    std::string lan;
-    std::string before;
-    std::string after;
+    typedef struct InternalMove InternalMove;
 
-    Move() : color(Color::NONE), from(Square::NONE), to(Square::NONE), piece(PieceSymbol::NONE),
-             captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE), flags(""), san(""),
-             lan(""), before(DEFAULT_POSITION), after(DEFAULT_POSITION) {}
+    typedef struct Move {
+        Color color;
+        Square from;
+        Square to;
+        PieceSymbol piece;
+        PieceSymbol captured;
+        PieceSymbol promotion;
+        std::string flags;
+        std::string san;
+        std::string lan;
+        std::string before;
+        std::string after;
 
-    Move(Color c, Square f, Square t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
-         PieceSymbol prom = PieceSymbol::NONE, std::string fl = "", std::string s = "",
-        std::string l = "", std::string b = DEFAULT_POSITION, std::string a = DEFAULT_POSITION)
-        : color(c), from(f), to(t), piece(p), captured(cp), promotion(prom),
-          flags(fl), san(s), lan(l), before(b), after(a) {}
-          
-    inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
-} Move;
+        Move() : color(Color::NONE), from(Square::NONE), to(Square::NONE), piece(PieceSymbol::NONE),
+                captured(PieceSymbol::NONE), promotion(PieceSymbol::NONE), flags(""), san(""),
+                lan(""), before(DEFAULT_POSITION), after(DEFAULT_POSITION) {}
 
-struct MoveOption {
-    std::string from;
-    std::string to;
-    std::optional<std::string> promotion;
-};
+        Move(Color c, Square f, Square t, PieceSymbol p, PieceSymbol cp = PieceSymbol::NONE,
+            PieceSymbol prom = PieceSymbol::NONE, std::string fl = "", std::string s = "",
+            std::string l = "", std::string b = DEFAULT_POSITION, std::string a = DEFAULT_POSITION)
+            : color(c), from(f), to(t), piece(p), captured(cp), promotion(prom),
+            flags(fl), san(s), lan(l), before(b), after(a) {}
+            
+        inline operator bool() const { return piece != PieceSymbol::NONE && color != Color::NONE; }
+    } Move;
 
-struct PerftStats {
-    int64_t nodes = 0;
-    int64_t captures = 0;
-    int64_t enPassants = 0;
-    int64_t castles = 0;
-    int64_t promotions = 0;
-    int64_t checks = 0;
-};
+    struct MoveOption {
+        std::string from;
+        std::string to;
+        std::optional<std::string> promotion;
+    };
+
+    struct PerftStats {
+        int64_t nodes = 0;
+        int64_t captures = 0;
+        int64_t enPassants = 0;
+        int64_t castles = 0;
+        int64_t promotions = 0;
+        int64_t checks = 0;
+    };
+}
 
 #endif

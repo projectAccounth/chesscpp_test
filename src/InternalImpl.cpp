@@ -1,5 +1,6 @@
 #include "InternalImpl.h"
 
+using namespace ChessCpp;
 
 /* Class definitions start here */
 
@@ -118,7 +119,7 @@ std::vector<PieceSymbol> Chess::chrImpl::_getAttackingPiece(Color c, int sq) {
 		if (diff == 0) continue;
 
 		const int index = diff + 119;
-		if (ATTACKS[index] & PIECE_MASKS.at(p.type)) {
+		if (ATTACKS[index] & getPieceMask(p.type)) {
 			if (p.type == PAWN) {
 				if (diff > 0) {
 					if (p.color == WHITE) pieces.push_back(p.type);
@@ -150,6 +151,7 @@ std::vector<PieceSymbol> Chess::chrImpl::_getAttackingPiece(Color c, int sq) {
 }
 
 bool Chess::chrImpl::_attacked(Color c, int sq) {
+	if ((sq & 0x88) || c == Color::NONE) return false;
 	for (int i = 0; i <= 119; i++) {
 		if (i & 0x88) {
 			i += 7;
@@ -163,15 +165,11 @@ bool Chess::chrImpl::_attacked(Color c, int sq) {
 
 		if (diff == 0) continue;
 
-		const int index = diff + 119;
-		if (ATTACKS[index] & PIECE_MASKS.at(p.type)) {
+		const int& index = diff + 119;
+		if (ATTACKS[index] & getPieceMask(p.type)) {
 			if (p.type == PAWN) {
-				if (diff > 0) {
-					if (p.color == WHITE) return true;
-				}
-				else {
-					if (p.color == BLACK) return true;
-				}
+				if (c == WHITE && (diff == 15 || diff == 17)) return true;
+				if (c == BLACK && (diff == -15 || diff == -17)) return true;
 				continue;
 			}
 
@@ -203,8 +201,8 @@ bool Chess::chrImpl::_isKingAttacked(Color c) {
 std::vector<InternalMove> Chess::chrImpl::_moves(const bool& legal, const PieceSymbol& p, const std::string& sq) {
 	std::vector<InternalMove> moves;
 	moves.reserve(128);
-	const Color& us = _turn;
-	const Color& them = us == WHITE ? BLACK : WHITE;
+	const Color us = _turn;
+	const Color them = us == WHITE ? BLACK : WHITE;
 
 	const Square& forSquare = !sq.empty() ? stringToSquare(sq) : Square::NONE;
 	const PieceSymbol& forPiece = p;
@@ -246,7 +244,7 @@ std::vector<InternalMove> Chess::chrImpl::_moves(const bool& legal, const PieceS
 				Helper::addMove(moves, us, from, to, PAWN);
 
 				to = from + PAWN_OFFSETS.at(us)[1];
-				if (SECOND_RANK.at(us) == rank(from) && !_board[to]) {
+				if ((us == WHITE ? RANK_2 : RANK_7) == rank(from) && !_board[to]) {
 					Helper::addMove(moves, us, from, to, PAWN, PieceSymbol::NONE, BITS_BIG_PAWN);
 				}
 			}
@@ -389,8 +387,8 @@ void Chess::chrImpl::_push(const InternalMove& move) {
 }
 
 void Chess::chrImpl::_makeMove(const InternalMove& m) {
-	const Color& us = _turn;
-	const Color& them = Helper::swapColor(us);
+	const Color us = _turn;
+	const Color them = Helper::swapColor(us);
 	_push(m);
 
 	_board[m.to] = _board[m.from];
@@ -432,12 +430,7 @@ void Chess::chrImpl::_makeMove(const InternalMove& m) {
 	case 63: _castlings &= ~CASTLE_BK; break;
 	}
 
-	switch (m.from) {
-	case 0:  _castlings &= ~CASTLE_WQ; break;
-	case 7:  _castlings &= ~CASTLE_WK; break;
-	case 56: _castlings &= ~CASTLE_BQ; break;
-	case 63: _castlings &= ~CASTLE_BK; break;
-	}
+
 
 	if (m.flags & BITS_BIG_PAWN) {
 		if (us == BLACK) {
@@ -481,8 +474,8 @@ InternalMove Chess::chrImpl::_undoMove() {
 	_halfMoves = old.value().halfMoves;
 	_moveNumber = old.value().moveNumber;
 
-	const Color& us = _turn;
-	const Color& them = Helper::swapColor(us);
+	const Color us = _turn;
+	const Color them = Helper::swapColor(us);
 
 	_board[m.from] = _board[m.to];
 	_board[m.from].type = m.piece;
@@ -580,8 +573,8 @@ std::optional<InternalMove> Chess::chrImpl::_moveFromSan(std::string move, bool 
 
 	std::smatch matches;
 	std::optional<std::string> p;
-	Square from;
-	Square to;
+	Square from = Square::NONE;
+	Square to = Square::NONE;
 	std::optional<std::string> promotion;
 
 	bool overlyDisambiguated = false;
@@ -717,7 +710,7 @@ Move Chess::chrImpl::_makePretty(InternalMove uglyMove) {
 	const Square fromAlgebraic = algebraic(from);
 	const Square toAlgebraic = algebraic(to);
 
-	Move m{
+	Move m = Move {
 		c,
 		fromAlgebraic,
 		toAlgebraic,
