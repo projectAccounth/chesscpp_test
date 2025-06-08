@@ -1,4 +1,5 @@
 #include "Helper.h"
+#include <set>
 
 using namespace ChessCpp;
 
@@ -29,98 +30,88 @@ Square ChessCpp::algebraic(int square) {
 	);
 }
 
-std::pair<bool, std::string> ChessCpp::validateFen(std::string fen) {
-	const std::vector<std::string> tokens = Helper::splitWithRegex(fen, R"(\s+)");
+bool isValidPiecePlacement(const std::string& placement) { 
+	const std::vector<std::string> rows = Helper::split(placement, '/'); 
+	if (rows.size() != 8) return false;  
+	for (size_t i = 0; i < rows.size(); ++i) { 
+		const std::string& row = rows[i]; 
+		int sum = 0; 
+		bool lastWasDigit = false;  
+		for (char c : row) { 
+			if (std::isdigit(c)) { 
+				if (lastWasDigit) return false; 
+				sum += c - '0'; 
+				lastWasDigit = true; 
+			} 
+			else if (std::string("rnbqkpRNBQKP").find(c) != std::string::npos) { 
+				sum += 1; lastWasDigit = false; 
+			} 
+			else { 
+				return false; 
+			} 
+		} if (sum != 8) 
+			return false; 
+	}  
+	// Disallow pawns on first or last rank 
+	for (char c : rows[0] + rows[7]) { 
+		if (c == 'P' || c == 'p') return false; 
+	}  
+	return true;
+}
+
+bool isValidActiveColor(const std::string& color) { 
+	return color == "w" || color == "b";
+}
+
+bool isValidCastlingRights(const std::string& rights) { 
+	if (rights == "-") return true;
+	static const std::string valid = "KQkq";
+	std::set<char> seen;
+	for (char c : rights) { 
+		if (valid.find(c) == std::string::npos) return false; 
+		if (!seen.insert(c).second) return false; // duplicate 
+	} 
+	return true;
+}
+
+bool isValidEnPassant(const std::string& ep, const std::string& turn) { 
+	if (ep == "-") return true;
+
+	if (!std::regex_match(ep, std::regex("^[a-h][36]$"))) return false;
+	char rank = ep[1];
+	if ((rank == '3' && turn == "w") || (rank == '6' && turn == "b")) return false;
+
+	return true;
+}
+
+bool isValidIntegerField(const std::string& s, bool mustBePositive) {
+	try {
+		int value = std::stoi(s);
+		return mustBePositive ? value > 0 : value >= 0;
+	} catch (...) {
+		return false;
+	}
+}
+
+bool hasExactlyOneKing(const std::string& board) {
+	int whiteKings = std::count(board.begin(), board.end(), 'K');
+	int blackKings = std::count(board.begin(), board.end(), 'k');
+
+	return whiteKings == 1 && blackKings == 1;
+}
+
+std::pair<bool, std::string> ChessCpp::validateFen(std::string fen) { 	
 	if (tokens.size() != 6) {
-		return { false, "Invalid FEN" };
+		return { false, "Invalid FEN: Expected 6 fields" };
 	}
 
-	const int moveNumber = std::stoi(tokens[5]);
-	if (std::isnan(moveNumber) || moveNumber <= 0) {
-		return { false, "Invalid FEN" };
-	}
+	if (!isValidPiecePlacement(tokens[0])) return { false, "Invalid FEN: Bad piece placement" };
+	if (!isValidActiveColor(tokens[1])) return { false, "Invalid FEN: Bad active color" };
+	if (!hasExactlyOneKing(tokens[0])) return { false, "Invalid FEN: King count invalid" };
+	if (!isValidCastlingRights(tokens[2])) return { false, "Invalid FEN: Bad castling rights" };
+	if (!isValidEnPassant(tokens[3], tokens[1])) return { false, "Invalid FEN: Bad en passant square" };
+	if (!isValidIntegerField(tokens[4], false)) return { false, "Invalid FEN: Bad halfmove clock" };
+	if (!isValidIntegerField(tokens[5], true)) return { false, "Invalid FEN: Bad fullmove number" };
 
-	const int halfMoves = std::stoi(tokens[4]);
-	if (std::isnan(halfMoves) || halfMoves < 0) {
-		return { false, "Invalid FEN" };
-	}
-
-	if (!std::regex_search(tokens[3], std::regex("^(-|[abcdefgh][36])$"))) {
-		return { false, "Invalid FEN" };
-	}
-
-	if (std::regex_search(tokens[2], std::regex("[^kKqQ-]"))) {
-		return { false, "Invalid FEN" };
-	}
-
-	if (!std::regex_search(tokens[1], std::regex("^(w|b)$"))) {
-		return { false, "Invalid FEN" };
-	}
-
-	const std::vector<std::string> rows = Helper::split(tokens[0], '/');
-	if (rows.size() != 8) {
-		return { false, "Invalid FEN" };
-	}
-
-	for (int i = 0; i < static_cast<int>(rows.size()); i++) {
-		int sumFields = 0;
-		bool previousWasNumber = false;
-
-		for (int k = 0; k < static_cast<int>(rows[i].size()); k++) {
-			if (Helper::isDigit(std::string(1, rows[i][k]))) {
-				if (previousWasNumber) {
-					return { false, "Invalid FEN" };
-				}
-				sumFields += std::stoi(std::string(1, rows[i][k]));
-				previousWasNumber = true;
-			}
-			else {
-				if (!std::regex_search(std::string(1, rows[i][k]), std::regex("^[prnbqkPRNBQK]"))) {
-					return { false, "Invalid FEN" };
-				}
-				sumFields += 1;
-				previousWasNumber = false;
-			}
-		}
-		if (sumFields != 8) {
-			return { false, "Invalid FEN" };
-		}
-	}
-	if (tokens[3][0] == '-') {}
-	else if (
-		(tokens[3][1] == '3' && tokens[1] == "w") ||
-		(tokens[3][1] == '6' && tokens[1] == "b")
-		) {
-		return { false, "Invalid FEN" };
-	}
-
-	const std::vector<std::tuple<std::string, std::regex>> kings = {
-		{"white", std::regex("K")}, {"black", std::regex("k")}
-	};
-
-	for (const auto& kI : kings) {
-		if (!std::regex_search(tokens[0], std::get<1>(kI))) {
-			return { false, "Invalid FEN" };
-		}
-		std::smatch matches;
-		if (std::regex_search(tokens[0], matches, std::get<1>(kI))) {
-			if (matches.size() > 1)
-				return { false, "Invalid FEN" };
-		}
-	}
-	std::string cnt = rows[0] + rows[7];
-	bool f = false;
-	/*std::any_of(cnt.begin(), cnt.end(), [&](char c) -> bool {
-	return std::toupper(c) == 'P';
-});*/
-	for (auto& c : cnt) {
-		if (c == 'P') {
-			f = true;
-		}
-	}
-
-	if (f)
-		return { false, "Invalid FEN" };
-
-	return { true, "" };
+	return { true, "Successful validation" };
 }
