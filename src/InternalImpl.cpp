@@ -430,8 +430,6 @@ void Chess::chrImpl::_makeMove(const InternalMove& m) {
 	case 63: _castlings &= ~CASTLE_BK; break;
 	}
 
-
-
 	if (m.flags & BITS_BIG_PAWN) {
 		if (us == BLACK) {
 			_epSquare = m.to - 16;

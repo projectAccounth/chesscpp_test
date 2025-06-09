@@ -101,6 +101,7 @@ bool hasExactlyOneKing(const std::string& board) {
 }
 
 std::pair<bool, std::string> ChessCpp::validateFen(std::string fen) { 	
+	const std::vector<std::string> tokens = Helper::splitWithRegex(fen, R"(\s+)");
 	if (tokens.size() != 6) {
 		return { false, "Invalid FEN: Expected 6 fields" };
 	}
